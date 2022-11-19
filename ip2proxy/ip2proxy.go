@@ -170,11 +170,12 @@ func (r Record) IsValid() bool {
 type DB struct {
 	r io.ReaderAt
 
-	// cached
-	fields  Field
-	offsets []uint32
+	fld Field
+	off []uint32
+	hdr dbheader
+}
 
-	// header
+type dbheader struct {
 	databasetype      DBType
 	databasecolumn    uint8
 	databaseyear      uint8
@@ -191,7 +192,7 @@ type DB struct {
 	filesize          uint32
 }
 
-// New initializes a IP2Proxy database from r.
+// New initializes a IP2Location database from r.
 func New(r io.ReaderAt) (*DB, error) {
 	db := &DB{r: r}
 
@@ -199,45 +200,45 @@ func New(r io.ReaderAt) (*DB, error) {
 	if _, err := db.r.ReadAt(row[:], 0); err != nil {
 		return nil, err
 	}
-	db.databasetype = DBType(row[0])
-	db.databasecolumn = row[1]
-	db.databaseyear = row[2]
-	db.databasemonth = row[3]
-	db.databaseday = row[4]
-	db.ipv4databasecount = binary.LittleEndian.Uint32(row[5:])
-	db.ipv4databaseaddr = binary.LittleEndian.Uint32(row[9:])
-	db.ipv6databasecount = binary.LittleEndian.Uint32(row[13:])
-	db.ipv6databaseaddr = binary.LittleEndian.Uint32(row[17:])
-	db.ipv4indexbaseaddr = binary.LittleEndian.Uint32(row[21:])
-	db.ipv6indexbaseaddr = binary.LittleEndian.Uint32(row[25:])
-	db.productcode = row[29]
-	db.producttype = row[30]
-	db.filesize = binary.LittleEndian.Uint32(row[31:])
+	db.hdr.databasetype = DBType(row[0])
+	db.hdr.databasecolumn = row[1]
+	db.hdr.databaseyear = row[2]
+	db.hdr.databasemonth = row[3]
+	db.hdr.databaseday = row[4]
+	db.hdr.ipv4databasecount = binary.LittleEndian.Uint32(row[5:])
+	db.hdr.ipv4databaseaddr = binary.LittleEndian.Uint32(row[9:])
+	db.hdr.ipv6databasecount = binary.LittleEndian.Uint32(row[13:])
+	db.hdr.ipv6databaseaddr = binary.LittleEndian.Uint32(row[17:])
+	db.hdr.ipv4indexbaseaddr = binary.LittleEndian.Uint32(row[21:])
+	db.hdr.ipv6indexbaseaddr = binary.LittleEndian.Uint32(row[25:])
+	db.hdr.productcode = row[29]
+	db.hdr.producttype = row[30]
+	db.hdr.filesize = binary.LittleEndian.Uint32(row[31:])
 
-	if db.databasetype == 'P' && db.databasecolumn == 'K' {
+	if db.hdr.databasetype == 'P' && db.hdr.databasecolumn == 'K' {
 		return nil, fmt.Errorf("%w: database is zipped", ErrInvalidBin)
 	}
-	if db.databaseyear >= 21 && db.productcode != 2 {
-		return nil, fmt.Errorf("%w: not an IP2Proxy database (product code %d)", ErrInvalidBin, db.productcode)
+	if db.hdr.databaseyear >= 21 && db.hdr.productcode != 2 {
+		return nil, fmt.Errorf("%w: not an IP2Proxy database (product code %d)", ErrInvalidBin, db.hdr.productcode)
 	}
-	if db.databasetype > DBTypeMax {
+	if db.hdr.databasetype > DBTypeMax {
 		return nil, fmt.Errorf("%w: unsupported db type", ErrInvalidBin)
 	}
 
-	db.fields = db.databasetype.Fields()
-	db.offsets = db.databasetype.offsets()
+	db.fld = db.hdr.databasetype.Fields()
+	db.off = db.hdr.databasetype.offsets()
 
 	return db, nil
 }
 
 // Version returns the database version.
 func (d *DB) Version() string {
-	return fmt.Sprintf("20%02d-%02d-%02d", d.databaseyear, d.databasemonth, d.databaseday)
+	return fmt.Sprintf("20%02d-%02d-%02d", d.hdr.databaseyear, d.hdr.databasemonth, d.hdr.databaseday)
 }
 
 // Fields returns the supported fields for the database.
 func (d *DB) Fields() Field {
-	return d.fields
+	return d.fld
 }
 
 // LookupString parses IP and calls Lookup.
@@ -262,88 +263,43 @@ func (d *DB) Lookup(ip netip.Addr) (Record, error) {
 // LookupFields looks up the specified fields for ip. If some fields are
 // not supported by the current database type, they will be ignored.
 func (d *DB) LookupFields(ip netip.Addr, mask Field) (Record, error) {
-	if !ip.IsValid() {
-		return Record{}, ErrInvalidAddress
-	}
-
-	// limit the fields to the intersection of the database fields and the mask
-	mask &= d.fields
-
-	// convert to v4mapped or v6
-	/*
-		a16 := ip.As16()
-		addr := uint128{
-			hi: binary.BigEndian.Uint64(a16[:8]),
-			lo: binary.BigEndian.Uint64(a16[8:]),
-		}
-	*/
-	addr := *(*uint128)(unsafe.Pointer(&ip)) // so we don't allocate a temporary buffer
-
-	// unmap
-	var is4 bool
-	switch {
-	case addr.hi>>48 == 0x2002:
-		// 6to4 -> v4mapped
-		addr.hi, addr.lo = 0, (addr.hi>>16)&0xffffffff|0xffff00000000
-	case addr.hi>>32 == 0x20010000:
-		// teredo -> v4mapped
-		addr.hi, addr.lo = 0, (^addr.lo)&0xffffffff|0xffff00000000
-	}
-	if addr.hi == 0 && addr.lo>>32 == 0xffff {
-		// v4mapped -> v4
-		addr.lo &= 0xffffffff
-		is4 = true
-	}
-
-	// calculate the index offset, if present
-	var idxoff uint32
-	if is4 {
-		if d.ipv4indexbaseaddr > 0 {
-			idxoff = d.ipv4indexbaseaddr + uint32(addr.lo)>>16<<3
-		}
-	} else {
-		if d.ipv6indexbaseaddr > 0 {
-			idxoff = d.ipv6indexbaseaddr + uint32(addr.hi>>48<<3)
-		}
+	// unmap the ip address into a native v4/v6
+	addr, is4, err := unmap(ip)
+	if err != nil {
+		return Record{}, err
 	}
 
 	// set the initial binary search range
-	var lower, upper uint32
-	if idxoff != 0 {
-		var row [8]byte
-		if _, err := d.r.ReadAt(row[:], int64(idxoff)-1); err != nil {
-			return Record{}, err
-		}
-		lower = binary.LittleEndian.Uint32(row[0:])
-		upper = binary.LittleEndian.Uint32(row[4:])
-	} else if is4 {
-		upper = d.ipv4databasecount
-	} else {
-		upper = d.ipv6databasecount
+	lower, upper, err := d.index(addr, is4)
+	if err != nil {
+		return Record{}, err
 	}
 
 	// each row has the ip bytes followed by the fields
-	var iplen, colsize uint32
+	var iplen uint32
 	if is4 {
 		iplen = 4
-		colsize = uint32(d.databasecolumn * 4) // 4 bytes per column
 	} else {
 		iplen = 16
-		colsize = uint32(d.databasecolumn*4) + 12 // 4 bytes per column, but IPFrom column is 16 bytes
 	}
-	row := make([]byte, colsize+iplen)
+
+	// 4 bytes per column except for the first one (IPFrom)
+	colsize := iplen + uint32(d.hdr.databasecolumn-1)*4
 
 	// do the binary search
+	row := make([]byte, colsize+iplen)
 	for lower <= upper {
 		mid := (lower + upper) / 2
 
 		// calculate the current row offset
 		off := mid * colsize
 		if is4 {
-			off += d.ipv4databaseaddr
+			off += d.hdr.ipv4databaseaddr
 		} else {
-			off += d.ipv6databaseaddr
+			off += d.hdr.ipv6databaseaddr
 		}
+
+		// read the row
 		if _, err := d.r.ReadAt(row, int64(off)-1); err != nil {
 			return Record{}, err
 		}
@@ -351,17 +307,11 @@ func (d *DB) LookupFields(ip netip.Addr, mask Field) (Record, error) {
 		// get the row start/end range
 		var ipfrom, ipto uint128
 		if is4 {
-			ipfrom = uint128{lo: uint64(binary.LittleEndian.Uint32(row[0:]))}
-			ipto = uint128{lo: uint64(binary.LittleEndian.Uint32(row[colsize:]))}
+			ipfrom = u128(binary.LittleEndian.Uint32(row))
+			ipto = u128(binary.LittleEndian.Uint32(row[colsize:]))
 		} else {
-			ipfrom = uint128{
-				hi: binary.LittleEndian.Uint64(row[8:]),
-				lo: binary.LittleEndian.Uint64(row[0:]),
-			}
-			ipto = uint128{
-				hi: binary.LittleEndian.Uint64(row[colsize+8:]),
-				lo: binary.LittleEndian.Uint64(row[colsize:]),
-			}
+			ipfrom = beUint128(row)
+			ipto = beUint128(row[colsize:])
 		}
 
 		// binary search cases
@@ -369,68 +319,99 @@ func (d *DB) LookupFields(ip netip.Addr, mask Field) (Record, error) {
 			upper = mid - 1
 			continue
 		}
-		if addr == ipto || ipto.Less(addr) {
+		if ipto == addr || ipto.Less(addr) {
 			lower = mid + 1
 			continue
 		}
-
-		// parse the fields
-		i, x := 0, Record{
-			Fields: mask & d.fields,
-		}
-		for f := Field(1); f < All; f <<= 1 {
-			var err error
-			if x.Fields.Has(f) {
-				switch o := iplen + d.offsets[i]; f {
-				case CountryShort:
-					x.CountryShort, err = d.readstrptr(row, o, 0)
-				case CountryLong:
-					x.CountryLong, err = d.readstrptr(row, o, 3)
-				case Region:
-					x.Region, err = d.readstrptr(row, o, 0)
-				case City:
-					x.City, err = d.readstrptr(row, o, 0)
-				case ISP:
-					x.ISP, err = d.readstrptr(row, o, 0)
-				case ProxyType:
-					x.ProxyType, err = d.readstrptr(row, o, 0)
-				case Domain:
-					x.Domain, err = d.readstrptr(row, o, 0)
-				case UsageType:
-					x.UsageType, err = d.readstrptr(row, o, 0)
-				case ASN:
-					x.ASN, err = d.readstrptr(row, o, 0)
-				case AS:
-					x.AS, err = d.readstrptr(row, o, 0)
-				case LastSeen:
-					x.LastSeen, err = d.readstrptr(row, o, 0)
-				case Threat:
-					x.Threat, err = d.readstrptr(row, o, 0)
-				case Provider:
-					x.Provider, err = d.readstrptr(row, o, 0)
-				default:
-					panic("unimplemented field")
-				}
-			}
-			if err != nil {
-				return Record{}, fmt.Errorf("read field %s: %w", f, err)
-			}
-			i++
-		}
-		return x, nil
+		return d.record(row[iplen:], mask)
 	}
 
 	// no match, so return an empty record
 	return Record{}, nil
 }
 
-func (d *DB) readstrptr(row []byte, off, rel uint32) (string, error) {
-	return d.readstr(binary.LittleEndian.Uint32(row[off:]) + rel)
+// record decodes the fields specified by mask from row.
+func (d *DB) record(rowdata []byte, mask Field) (Record, error) {
+	i, x := 0, Record{
+		Fields: mask & d.fld,
+	}
+	for f := Field(1); f < All; f <<= 1 {
+		var err error
+		if x.Fields.Has(f) {
+			switch f {
+			case CountryShort:
+				x.CountryShort, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case CountryLong:
+				x.CountryLong, err = readstrptr(d.r, rowdata, d.off[i], 3)
+			case Region:
+				x.Region, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case City:
+				x.City, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case ISP:
+				x.ISP, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case ProxyType:
+				x.ProxyType, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case Domain:
+				x.Domain, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case UsageType:
+				x.UsageType, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case ASN:
+				x.ASN, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case AS:
+				x.AS, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case LastSeen:
+				x.LastSeen, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case Threat:
+				x.Threat, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			case Provider:
+				x.Provider, err = readstrptr(d.r, rowdata, d.off[i], 0)
+			default:
+				panic("unimplemented field")
+			}
+		}
+		if err != nil {
+			return Record{}, fmt.Errorf("read field %s: %w", f, err)
+		}
+		i++
+	}
+	return x, nil
 }
 
-func (d *DB) readstr(pos uint32) (string, error) {
+// index determines the lower and upper search offset for a, using the index if
+// present.
+func (d *DB) index(a uint128, is4 bool) (lower, upper uint32, err error) {
+	var idxoff uint32
+	if is4 {
+		if d.hdr.ipv4indexbaseaddr > 0 {
+			idxoff = d.hdr.ipv4indexbaseaddr + uint32(a.lo)>>16<<3
+		}
+	} else {
+		if d.hdr.ipv6indexbaseaddr > 0 {
+			idxoff = d.hdr.ipv6indexbaseaddr + uint32(a.hi>>48<<3)
+		}
+	}
+	if idxoff == 0 {
+		if is4 {
+			upper = d.hdr.ipv4databasecount
+		} else {
+			upper = d.hdr.ipv6databasecount
+		}
+		return
+	}
+	var row [8]byte
+	if _, err = d.r.ReadAt(row[:], int64(idxoff)-1); err == nil {
+		lower = binary.LittleEndian.Uint32(row[0:])
+		upper = binary.LittleEndian.Uint32(row[4:])
+	}
+	return
+}
+
+// readstrptr reads the string from r at *(*(row + off) + rel).
+func readstrptr(r io.ReaderAt, row []byte, off, rel uint32) (string, error) {
+	off = binary.LittleEndian.Uint32(row[off:]) + rel
+
 	var data [1 + 0xFF]byte // length byte + max length
-	if n, err := d.r.ReadAt(data[:], int64(pos)); err != nil && !errors.Is(err, io.EOF) {
+	if n, err := r.ReadAt(data[:], int64(off)); err != nil && !errors.Is(err, io.EOF) {
 		return "", err
 	} else if 1+int(data[0]) >= n {
 		return "", fmt.Errorf("string length %d out of range", n)
@@ -438,11 +419,63 @@ func (d *DB) readstr(pos uint32) (string, error) {
 	return string(data[1 : 1+data[0]]), nil
 }
 
+// uint128 represents a uint128 using two uint64s.
 type uint128 struct {
 	hi uint64
 	lo uint64
 }
 
+// u128 returns a uint32 as a uint128.
+func u128(u32 uint32) uint128 {
+	return uint128{lo: uint64(u32)}
+}
+
+// beUint128 reads a big-endian uint128 from b.
+func beUint128(b []byte) uint128 {
+	_ = b[15] // bounds check hint to compiler; see golang.org/issue/14808
+	return uint128{
+		hi: binary.LittleEndian.Uint64(b[8:]),
+		lo: binary.LittleEndian.Uint64(b[0:]),
+	}
+}
+
+// Less returns true if n < v.
 func (n uint128) Less(v uint128) bool {
 	return n.hi < v.hi || (n.hi == v.hi && n.lo < v.lo)
+}
+
+// as16 returns a as a IPv4-mapped or native IPv6.
+func as16(a netip.Addr) uint128 {
+	/*
+		a16 := a.As16()
+		return uint128{
+			hi: binary.BigEndian.Uint64(a16[:8]),
+			lo: binary.BigEndian.Uint64(a16[8:]),
+		}
+	*/
+	return *(*uint128)(unsafe.Pointer(&a))
+}
+
+// unmap unmaps a, returning a raw v4/v6 address and whether it is an IPv4.
+func unmap(a netip.Addr) (uint128, bool, error) {
+	if !a.IsValid() {
+		return uint128{}, false, ErrInvalidAddress
+	}
+	r := as16(a)
+
+	switch {
+	case r.hi>>48 == 0x2002:
+		// 6to4 -> v4mapped
+		r.hi, r.lo = 0, (r.hi>>16)&0xffffffff|0xffff00000000
+	case r.hi>>32 == 0x20010000:
+		// teredo -> v4mapped
+		r.hi, r.lo = 0, (^r.lo)&0xffffffff|0xffff00000000
+	}
+
+	if r.hi == 0 && r.lo>>32 == 0xffff {
+		// v4mapped -> v4
+		r.lo &= 0xffffffff
+		return r, true, nil
+	}
+	return r, false, nil
 }
