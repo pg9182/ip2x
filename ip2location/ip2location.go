@@ -416,7 +416,7 @@ func (d *DB) LookupFields(ip netip.Addr, mask Field) (Record, error) {
 			upper = mid - 1
 			continue
 		}
-		if ipto.Less(addr) {
+		if ipto == addr || ipto.Less(addr) {
 			lower = mid + 1
 			continue
 		}
