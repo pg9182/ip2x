@@ -277,6 +277,11 @@ func New(r io.ReaderAt) (*DB, error) {
 	return db, nil
 }
 
+// Version returns the database version.
+func (d *DB) Version() string {
+	return fmt.Sprintf("20%02d-%02d-%02d", d.databaseyear, d.databasemonth, d.databaseday)
+}
+
 // Fields returns the supported fields for the database.
 func (d *DB) Fields() Field {
 	return d.fields
