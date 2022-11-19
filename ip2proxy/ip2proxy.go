@@ -7,20 +7,25 @@ import (
 	"fmt"
 	"io"
 	"net/netip"
+	"strconv"
 	"strings"
 	"unsafe"
 )
 
+const (
+	DBProduct     = "IP2Proxy"
+	DBProductCode = 2
+	DBTypePrefix  = "PX"
+	DBTypeMax     = DBType(12)
+)
+
 var (
-	ErrInvalidBin     = errors.New("invalid IP2Location database format (ensure you are using the latest IP2Proxy BIN file)")
+	ErrInvalidBin     = errors.New("invalid database format (ensure you are using the latest " + DBProduct + " BIN file)")
 	ErrInvalidAddress = errors.New("invalid IP address")
 )
 
-// DBType is an IP2Location database type.
+// DBType is the database type.
 type DBType uint8
-
-// DBTypeMax is the maximum supported DB type
-const DBTypeMax DBType = 12
 
 // Fields gets the mask of supported fields for the specified DB type.
 func (t DBType) Fields() Field {
@@ -49,7 +54,7 @@ func (t DBType) offsets() []uint32 {
 	return r
 }
 
-// Field is a bitmask representing one or more IP2Location database fields.
+// Field is a bitmask representing one or more database fields.
 type Field uint64
 
 const (
@@ -143,7 +148,7 @@ func (f Field) offset(t DBType) (uint32, bool) {
 	return uint32(v-2) << 2, true
 }
 
-// Record is an IP2Location database record.
+// Record contains information about an IP.
 type Record struct {
 	Fields       Field
 	CountryShort string
@@ -166,7 +171,7 @@ func (r Record) IsValid() bool {
 	return r.Fields != 0
 }
 
-// DB is an IP2Location database.
+// DB efficiently reads an IP database.
 type DB struct {
 	r io.ReaderAt
 
@@ -192,7 +197,7 @@ type dbheader struct {
 	filesize          uint32
 }
 
-// New initializes a IP2Location database from r.
+// New initializes a database from r.
 func New(r io.ReaderAt) (*DB, error) {
 	db := &DB{r: r}
 
@@ -218,8 +223,8 @@ func New(r io.ReaderAt) (*DB, error) {
 	if db.hdr.databasetype == 'P' && db.hdr.databasecolumn == 'K' {
 		return nil, fmt.Errorf("%w: database is zipped", ErrInvalidBin)
 	}
-	if db.hdr.databaseyear >= 21 && db.hdr.productcode != 2 {
-		return nil, fmt.Errorf("%w: not an IP2Proxy database (product code %d)", ErrInvalidBin, db.hdr.productcode)
+	if db.hdr.databaseyear >= 21 && db.hdr.productcode != DBProductCode {
+		return nil, fmt.Errorf("%w: not an %s database (product code %d)", ErrInvalidBin, DBProduct, db.hdr.productcode)
 	}
 	if db.hdr.databasetype > DBTypeMax {
 		return nil, fmt.Errorf("%w: unsupported db type", ErrInvalidBin)
@@ -231,9 +236,32 @@ func New(r io.ReaderAt) (*DB, error) {
 	return db, nil
 }
 
+// String returns a human-readable string describing the database.
+func (d *DB) String() string {
+	var ipv string
+	if v4, v6 := d.HasIPv4(), d.HasIPv6(); v4 && !v6 {
+		ipv = "IPv4"
+	} else if !v4 && v6 {
+		ipv = "IPv6"
+	} else {
+		ipv = "IPv4+IPv6"
+	}
+	return DBProduct + " " + d.Version() + " " + DBTypePrefix + strconv.Itoa(int(d.hdr.databasetype)) + " [" + d.Fields().String() + "]" + " (" + ipv + ")"
+}
+
 // Version returns the database version.
 func (d *DB) Version() string {
 	return fmt.Sprintf("20%02d-%02d-%02d", d.hdr.databaseyear, d.hdr.databasemonth, d.hdr.databaseday)
+}
+
+// HasIPv4 returns true if the database contains IPv4 entries.
+func (d *DB) HasIPv4() bool {
+	return d.hdr.ipv4databasecount != 0
+}
+
+// HasIPv6 returns true if the database contains HasIPv6 entries.
+func (d *DB) HasIPv6() bool {
+	return d.hdr.ipv6databasecount != 0
 }
 
 // Fields returns the supported fields for the database.
