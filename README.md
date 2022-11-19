@@ -10,7 +10,7 @@ Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2l
 - Is faster and has fewer allocations.
 - Supports directly querying a [`net/netip.Addr`](https://pkg.go.dev/net/netip#Addr).
 - Supports querying arbitrary selections of fields.
-- Allows checking which fields are available in a database.
+- Exposes database metadata including version, product, available fields, and supported IP versions.
 - Handles all errors correctly.
 - Uses errors and zero values correctly instead of using arbitrary strings in field values.
 - Uses code generation to reduce code duplication.
