@@ -13,3 +13,4 @@ Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2l
 - Allows checking which fields are available in a database.
 - Handles all errors correctly.
 - Uses errors and zero values correctly instead of using arbitrary strings in field values.
+- Uses code generation to reduce code duplication.
