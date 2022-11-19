@@ -1,3 +1,3 @@
 module github.com/pg9182/ip2x
 
-go 1.19
+go 1.18
