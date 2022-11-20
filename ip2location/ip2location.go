@@ -198,28 +198,107 @@ type Record struct {
 	// the database.
 	Fields Field
 
-	CountryShort       string
-	CountryLong        string
-	Region             string
-	City               string
-	ISP                string
-	Latitude           float32
-	Longitude          float32
-	Domain             string
-	Zipcode            string
-	Timezone           string
-	NetSpeed           string
-	IDDCode            string
-	AreaCode           string
+	// Two-character country code based on ISO 3166.
+	CountryShort string
+
+	// Country name based on ISO 3166.
+	CountryLong string
+
+	// Region or state name.
+	Region string
+
+	// City name.
+	City string
+
+	// Internet Service Provider or company's name.
+	ISP string
+
+	// City latitude. Defaults to capital city latitude if city is unknown.
+	Latitude float32
+
+	// City longitude. Defaults to capital city longitude if city is unknown.
+	Longitude float32
+
+	// Internet domain name associated with IP address range.
+	Domain string
+
+	// ZIP code or Postal code.
+	//
+	// See https://www.ip2location.com/zip-code-coverage.
+	Zipcode string
+
+	// UTC time zone (with DST supported).
+	Timezone string
+
+	// Internet Connection Type
+	//   - (DIAL) dial up
+	//   - (DSL) broadband/cable/fiber/mobile
+	//   - (COMP) company/T1
+	NetSpeed string
+
+	// The IDD prefix to call the city from another country.
+	IDDCode string
+
+	// A varying length number assigned to geographic areas for call between
+	// cities.
+	//
+	// See https://www.ip2location.com/area-code-coverage.
+	AreaCode string
+
+	// The special code to identify the nearest weather observation station.
 	WeatherStationCode string
+
+	// The name of the nearest weather observation station.
 	WeatherStationName string
-	MCC                string
-	MNC                string
-	MobileBrand        string
-	Elevation          float32
-	UsageType          string
-	AddressType        string
-	Category           string
+
+	// Mobile Country Codes (MCC) as defined in ITU E.212 for use in identifying
+	// mobile stations in wireless telephone networks, particularly GSM and UMTS
+	// networks.
+	MCC string
+
+	// Mobile Network Code (MNC) is used in combination with a Mobile Country
+	// Code (MCC) to uniquely identify a mobile phone operator or carrier.
+	MNC string
+
+	// Commercial brand associated with the mobile carrier.
+	//
+	// See https://www.ip2location.com/mobile-carrier-coverage.
+	MobileBrand string
+
+	// Average height of city above sea level in meters (m).
+	Elevation float32
+
+	// Usage type classification of ISP or company.
+	//   - (COM) Commercial
+	//   - (ORG) Organization
+	//   - (GOV) Government
+	//   - (MIL) Military
+	//   - (EDU) University/College/School
+	//   - (LIB) Library
+	//   - (CDN) Content Delivery Network
+	//   - (ISP) Fixed Line ISP
+	//   - (MOB) Mobile ISP
+	//   - (DCH) Data Center/Web Hosting/Transit
+	//   - (SES) Search Engine Spider
+	//   - (RSV) Reserved
+	UsageType string
+
+	// IP address types as defined in Internet Protocol version 4 (IPv4) and
+	// Internet Protocol version 6 (IPv6).
+	//   - (A) Anycast - One to the closest
+	//   - (U) Unicast - One to one
+	//   - (M) Multicast - One to multiple
+	//   - (B) Broadcast - One to all
+	AddressType string
+
+	// The domain category is based on IAB Tech Lab Content Taxonomy.
+	//
+	// These categories are comprised of Tier-1 and Tier-2 (if available) level
+	// categories widely used in services like advertising, Internet security
+	// and filtering appliances.
+	//
+	// See https://www.ip2location.com/free/iab-categories.
+	Category string
 }
 
 // IsValid checks whether the record exists in the database.
