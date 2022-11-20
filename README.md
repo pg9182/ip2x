@@ -99,3 +99,16 @@ func writeJSON(obj any) {
 	enc.Encode(obj)
 }
 ```
+
+## Database updates
+
+1. If additional header fields or logic is required, edit `internal/dbgen.tmpl`.
+2. If a new database type is available, increment `DBTypeMax` and add additional
+   offsets for each field as necessary in `*/codegen.go` files.
+3. If new fields are available, add new calls to the `(*internal.DBInfo).Doc`
+   field helpers in `*/codegen.go` files.
+4. If new/updated field documentation is available, add/update calls to
+   `(*internal.DBInfo).Doc` in `*/codegen.go` files.
+5. Run `go generate ./...` to regenerate the database parsers, and test as
+   necessary.
+6. Commit the changes to all files.
