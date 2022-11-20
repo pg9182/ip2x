@@ -124,6 +124,9 @@ type Record struct {
 
 {{- range $n, $f := .Field }}
 	{{- if not $n }}{{ "\n" }}{{ end }}
+	{{- with ($f.WrappedDocComment 1 80) }}
+	{{ . }}
+	{{- end }}
     {{ $f.GoName }} {{ $f.Type.GoType }}
 {{- end }}
 }

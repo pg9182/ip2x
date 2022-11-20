@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"go/doc/comment"
 	"go/format"
 	"os"
 	"path/filepath"
@@ -39,6 +40,9 @@ type DBField struct {
 	// Field name.
 	GoName string
 
+	// Documentation.
+	GoDoc string
+
 	// Field type.
 	Type DBFieldType
 
@@ -47,6 +51,16 @@ type DBField struct {
 
 	// [DBTypeMax]offset (zero for not present)
 	Offset []uint8
+}
+
+func (f DBField) WrappedDocComment(tabs int, width int) string {
+	if f.GoDoc != "" {
+		var cr comment.Printer
+		cr.TextPrefix = strings.Repeat("\t", tabs) + "// "
+		cr.TextWidth = 80 - tabs*4 - 3 // godoc uses a tab width of 4
+		return "\n" + strings.TrimRight(string(cr.Text(new(comment.Parser).Parse(f.GoDoc))), "\n")
+	}
+	return ""
 }
 
 type DBFieldType string
@@ -188,4 +202,15 @@ func (d *DBInfo) Float32(GoName string, Offset ...uint8) {
 		Type:   DBFieldTypeFloat32,
 		Offset: append([]uint8{0}, Offset...),
 	})
+}
+
+// Doc is a helper to add documentation to a field.
+func (d *DBInfo) Doc(GoName string, GoDoc ...string) {
+	for i, f := range d.Field {
+		if f.GoName == GoName {
+			(&d.Field[i]).GoDoc = strings.Join(GoDoc, "\n")
+			return
+		}
+	}
+	panic("no such field")
 }
