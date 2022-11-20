@@ -193,7 +193,11 @@ func (f Field) offset(t DBType) (uint32, bool) {
 
 // Record contains information about an IP.
 type Record struct {
-	Fields             Field
+	// The fields set from (and available in) the database. Note that even if a
+	// field is included in this mask, it may still be empty if it was empty in
+	// the database.
+	Fields Field
+
 	CountryShort       string
 	CountryLong        string
 	Region             string
