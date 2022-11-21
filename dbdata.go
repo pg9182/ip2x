@@ -4,7 +4,7 @@ package ip2x
 
 import "strconv"
 
-//go:generate go run codegen.go
+//go:generate go run ./internal/codegen dbdata.txt
 
 // IP2Location™ IP Address Geolocation Database provides a solution to deduce
 // the geolocation of a device connected to the Internet and to determine the
