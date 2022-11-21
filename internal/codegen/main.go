@@ -572,13 +572,40 @@ func gen(ast *AST, cmd string) ([]byte, error) {
 
 		buf.WriteString("\n")
 		for i, x := range ast.Database {
-			buf.Write(cr.Text(cp.Parse(strings.Join(x.GoDoc, "\n") + "\n")))
+			cc := cp.Parse(strings.Join(x.GoDoc, "\n") + "\n")
+			if len(x.Type) != 0 {
+				s := fmt.Sprintf("Up to %s%d.", x.ProductPrefix, len(x.Type))
+				cc.Content = append(cc.Content, &comment.Paragraph{Text: []comment.Text{comment.Plain(s)}})
+			}
+			buf.Write(cr.Text(cc))
 			fmt.Fprintf(&buf, "const %s DBProduct = %d\n\n", x.ProductName, i+1)
 		}
 
 		fmt.Fprintf(&buf, "\n")
 		for i, x := range ast.Field {
-			buf.Write(cr.Text(cp.Parse(strings.Join(x.GoDoc, "\n") + "\n")))
+			var ix []comment.Text
+			for _, d := range ast.Database {
+				var ts []int
+				for i, v := range d.Type {
+					if v.columns[x.ColumnName] != nil {
+						ts = append(ts, i+1)
+					}
+				}
+				for _, x := range mkranges(ts...) {
+					if len(ix) == 0 {
+						ix = append(ix, comment.Plain("In "))
+					} else {
+						ix = append(ix, comment.Plain(", "))
+					}
+					ix = append(ix, comment.Plain(d.ProductPrefix+x))
+				}
+			}
+
+			cc := cp.Parse(strings.Join(x.GoDoc, "\n") + "\n")
+			if len(ix) != 0 {
+				cc.Content = append(cc.Content, &comment.Paragraph{Text: append(ix, comment.Plain("."))})
+			}
+			buf.Write(cr.Text(cc))
 			fmt.Fprintf(&buf, "const %s DBField = %d\n\n", x.GoName, i+1)
 		}
 	}
@@ -728,6 +755,32 @@ const stringerfnu = `func (%[1]s %[2]s) %[3]s() string {
 	}
 	return _%[2]s_%[3]s_str[_%[2]s_%[3]s_idx[%[1]s]:_%[2]s_%[3]s_idx[%[1]s+1]]
 }`
+
+// mkranges stringifies ns, collapsing contiguous increasing ranges.
+func mkranges(ns ...int) (s []string) {
+	for r, rs, re := false, 0, 0; len(ns) != 0; ns = ns[1:] {
+		// update the range end, and if we aren't continuing an existing one,
+		// then also update the start
+		if re = ns[0]; !r {
+			r, rs = true, re
+		}
+
+		// check if the next iteration will continue the current range
+		if len(ns) > 1 {
+			if next := ns[1]; re == next || re+1 == next {
+				continue
+			}
+		}
+
+		// if not, then end and emit the range
+		if r = false; rs != re {
+			s = append(s, strconv.Itoa(rs)+"-"+strconv.Itoa(re))
+		} else {
+			s = append(s, strconv.Itoa(rs))
+		}
+	}
+	return
+}
 
 // genmd generates a markdown summary of the databases.
 func genmd(ast *AST) ([]byte, error) {

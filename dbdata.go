@@ -14,12 +14,16 @@ import "strconv"
 // domain name, net speed, area code, weather station code, weather station
 // name, mobile country code (MCC), mobile network code (MNC) and carrier brand,
 // elevation, usage type, address type and advertising category.
+//
+// Up to DB25.
 const IP2Location DBProduct = 1
 
 // IP2Proxy™ Proxy Detection Database contains IP addresses which are used
 // as VPN anonymizer, open proxies, web proxies and Tor exits, data center,
 // web hosting (DCH) range, search engine robots (SES) and residential proxies
 // (RES).
+//
+// Up to PX11.
 const IP2Proxy DBProduct = 2
 
 // IP address types as defined in Internet Protocol version 4 (IPv4) and
@@ -28,17 +32,25 @@ const IP2Proxy DBProduct = 2
 //   - (U) Unicast - One to one
 //   - (M) Multicast - One to multiple
 //   - (B) Broadcast - One to all
+//
+// In DB25.
 const AddressType DBField = 1
 
 // A varying length number assigned to geographic areas for call between cities.
 //
 // See https://www.ip2location.com/area-code-coverage.
+//
+// In DB15-16, DB18, DB20-22, DB24-25.
 const AreaCode DBField = 2
 
 // Autonomous system number (ASN).
+//
+// In PX7-11.
 const AS DBField = 3
 
 // Autonomous system (AS) name.
+//
+// In PX7-11.
 const ASN DBField = 4
 
 // The domain category is based on IAB Tech Lab Content Taxonomy.
@@ -48,59 +60,91 @@ const ASN DBField = 4
 // filtering appliances.
 //
 // See https://www.ip2location.com/free/iab-categories.
+//
+// In DB25.
 const Category DBField = 5
 
 // City name.
+//
+// In DB3-25, PX3-11.
 const City DBField = 6
 
 // Two-character country code based on ISO 3166.
+//
+// In DB1-25, PX1-11.
 const CountryCode DBField = 7
 
 // Country name based on ISO 3166.
+//
+// In DB1-25, PX1-11.
 const CountryName DBField = 8
 
 // Internet domain name associated with IP address range.
+//
+// In DB7-8, DB10, DB12, DB14, DB16, DB18-20, DB22-25, PX5-11.
 const Domain DBField = 9
 
 // Average height of city above sea level in meters (m).
+//
+// In DB21-22, DB24-25.
 const Elevation DBField = 10
 
 // The IDD prefix to call the city from another country.
+//
+// In DB15-16, DB18, DB20-22, DB24-25.
 const IDDCode DBField = 11
 
 // Internet Service Provider or company's name.
+//
+// In DB2, DB4, DB6-8, DB10, DB12, DB14, DB16, DB18-20, DB22-25, PX4-11.
 const ISP DBField = 12
 
 // Proxy last seen in days.
+//
+// In PX8-11.
 const LastSeen DBField = 13
 
 // City latitude. Defaults to capital city latitude if city is unknown.
+//
+// In DB5-6, DB8-25.
 const Latitude DBField = 14
 
 // City longitude. Defaults to capital city longitude if city is unknown.
+//
+// In DB5-6, DB8-25.
 const Longitude DBField = 15
 
 // Mobile Country Codes (MCC) as defined in ITU E.212 for use in identifying
 // mobile stations in wireless telephone networks, particularly GSM and UMTS
 // networks.
+//
+// In DB19-20, DB22-25.
 const MCC DBField = 16
 
 // Mobile Network Code (MNC) is used in combination with a Mobile Country Code
 // (MCC) to uniquely identify a mobile phone operator or carrier.
+//
+// In DB19-20, DB22-25.
 const MNC DBField = 17
 
 // Commercial brand associated with the mobile carrier.
 //
 // See https://www.ip2location.com/mobile-carrier-coverage.
+//
+// In DB19-20, DB22-25.
 const MobileBrand DBField = 18
 
 // Internet Connection Type
 //   - (DIAL) dial up
 //   - (DSL) broadband/cable/fiber/mobile
 //   - (COMP) company/T1
+//
+// In DB13-14, DB16-18, DB20, DB22, DB24-25.
 const NetSpeed DBField = 19
 
 // Name of VPN provider if available.
+//
+// In PX11.
 const Provider DBField = 20
 
 // Type of proxy.
@@ -128,18 +172,26 @@ const Provider DBField = 20
 //   - (RES) Residential proxies. These services offer users proxy connections
 //     through residential ISP with or without consents of peers to share their
 //     idle resources. Only available with PX10 & PX11. Anonymity: Medium.
+//
+// In PX2-11.
 const ProxyType DBField = 21
 
 // Region or state name.
+//
+// In DB3-25, PX3-11.
 const Region DBField = 22
 
 // Security threat reported.
 //   - (SPAM) Email and forum spammers
 //   - (SCANNER) Network security scanners
 //   - (BOTNET) Malware infected devices
+//
+// In PX9-11.
 const Threat DBField = 23
 
 // UTC time zone (with DST supported).
+//
+// In DB11-18, DB20-22, DB24-25.
 const Timezone DBField = 24
 
 // Usage type classification of ISP or company.
@@ -155,17 +207,25 @@ const Timezone DBField = 24
 //   - (DCH) Data Center/Web Hosting/Transit
 //   - (SES) Search Engine Spider
 //   - (RSV) Reserved
+//
+// In DB23-25, PX6-11.
 const UsageType DBField = 25
 
 // The special code to identify the nearest weather observation station.
+//
+// In DB17-18, DB20, DB22, DB24-25.
 const WeatherStationCode DBField = 26
 
 // The name of the nearest weather observation station.
+//
+// In DB17-18, DB20, DB22, DB24-25.
 const WeatherStationName DBField = 27
 
 // ZIP code or Postal code.
 //
 // See https://www.ip2location.com/zip-code-coverage.
+//
+// In DB9-12, DB14-16, DB18, DB20-22, DB24-25.
 const Zipcode DBField = 28
 
 const (
