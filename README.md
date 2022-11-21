@@ -2,7 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/pg9182/ip2x.svg)](https://pkg.go.dev/github.com/pg9182/ip2x)
 
-Module ip2x is an idiomatic, efficient, and robust library for reading [IP2Location](https://www.ip2location.com/) databases.
+Module ip2x is an idiomatic, efficient, and robust library and command-line tool for querying [IP2Location](https://www.ip2location.com/) databases.
 
 Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2location/ip2location-go) and  [`github.com/ip2location/ip2proxy-go/v3`](https://github.com/ip2location/ip2proxy-go), this library:
 
@@ -21,7 +21,33 @@ Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2l
 - Has field documentation comments.
 - Uses code generation to reduce code duplication and potential bugs.
 
-## Example
+## CLI
+
+```
+ip2x db_path [ip_addr...]
+  -compact
+        compact output
+  -json
+        use json output
+  -strict
+        fail immediately if a record is not found
+```
+
+```
+$ ip2x IP2LOCATION-LITE-DB11.IPV6.BIN 1.1.1.1
+IP2Location<DB11>{
+  city "Los Angeles"
+  country_code "US"
+  country_name "United States of America"
+  latitude 34.05286
+  longitude -118.24357
+  region "California"
+  time_zone "-07:00"
+  zip_code "90001"
+}
+```
+
+## Library
 
 ```go
 package main
