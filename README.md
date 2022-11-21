@@ -8,12 +8,18 @@ Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2l
 
 - Is written in idiomatic Go.
 - Is faster and has fewer allocations.
+- Only reads individual fields as requested.
+- Has more flexible type-independent getters.
 - Supports directly querying a [`net/netip.Addr`](https://pkg.go.dev/net/netip#Addr).
-- Supports querying arbitrary selections of fields.
 - Exposes database metadata including version, product, available fields, and supported IP versions.
 - Handles all errors correctly.
 - Uses errors and zero values correctly instead of using arbitrary strings in field values.
-- Uses code generation to reduce code duplication.
+- Supports pretty-printing database records as text (optionally colored and/or
+  multiline).
+- Supports encoding database records as JSON.
+- Unifies the interface for both databases.
+- Has field documentation comments.
+- Uses code generation to reduce code duplication and potential bugs.
 
 ## Example
 
@@ -21,13 +27,10 @@ Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2l
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/netip"
 	"os"
 
-	"github.com/pg9182/ip2x/ip2location"
+	"github.com/pg9182/ip2x"
 )
 
 func main() {
@@ -37,78 +40,77 @@ func main() {
 	}
 	defer f.Close()
 
-	db, err := ip2location.New(f)
+	db, err := ip2x.New(f)
 	if err != nil {
 		panic(err)
 	}
 
-	// show human-readable informatino about the database
-	fmt.Println(db) // example: IP2Location 2022-10-29 DB11 [CountryShort|CountryLong|Region|City|Latitude|Longitude|Zipcode|Timezone] (IPv4+IPv6)
+	fmt.Println(db)
+	fmt.Println()
 
-	// query db metadata
-	fmt.Println(db.Fields().Has(ip2location.Region), db.Fields().Has(ip2location.AreaCode), db.HasIPv4(), db.HasIPv6()) // example: true false true true
-
-	// lookup a parsed netip
-	r, err := db.Lookup(netip.MustParseAddr("8.8.4.4"))
+	r, err := db.LookupString("8.8.8.8")
 	if err != nil {
-		switch {
-		case errors.Is(err, ip2location.ErrInvalidAddress):
-			fmt.Println("invalid address")
-		default:
-			panic(err) // an i/o or other error occured
-		}
+		panic(err)
 	}
-	writeJSON(r)
 
-	// lookup specific fields only (other/unsupported fields will be empty)
-	r, err = db.LookupFields(netip.MustParseAddr("8.8.4.4"), ip2location.CountryShort|ip2location.Region|ip2location.City)
-	if err != nil {
-		switch {
-		case errors.Is(err, ip2location.ErrInvalidAddress):
-			fmt.Println("invalid address")
-		default:
-			panic(err) // an i/o or other error occured
-		}
+	// pretty-print
+	fmt.Println(r.FormatString(true, true))
+	fmt.Println()
+
+	// get some fields the easy way
+	fmt.Println("Test:", r.Get(ip2x.CountryCode), r.Get(ip2x.Region))
+
+	// get the latitude
+	{
+		fmt.Println()
+		fmt.Printf("Get(Latitude): %#v\n", r.Get(ip2x.Latitude))
+
+		latstr, ok := r.GetString(ip2x.Latitude)
+		fmt.Printf("GetString(Latitude): %#v, %#v\n", latstr, ok)
+
+		latflt, ok := r.GetFloat32(ip2x.Latitude)
+		fmt.Printf("GetFloat32(Latitude): %#v, %#v\n", latflt, ok)
 	}
-	writeJSON(r)
 
-	// lookup a string ip
-	r, err = db.LookupString("127.0.0.1")
-	if err != nil {
-		switch {
-		case errors.Is(err, ip2location.ErrInvalidAddress):
-			fmt.Println("invalid address")
-		default:
-			panic(err) // an i/o or other error occured
-		}
+	// get an unsupported field
+	{
+		fmt.Println()
+		fmt.Printf("Get(ISP): %#v\n", r.Get(ip2x.ISP))
+
+		ispstr, ok := r.GetString(ip2x.ISP)
+		fmt.Printf("GetString(ISP): %#v, %#v\n", ispstr, ok)
+
+		ispflt, ok := r.GetString(ip2x.ISP)
+		fmt.Printf("GetString(ISP): %#v, %#v\n", ispflt, ok)
 	}
-	writeJSON(r) // note: empty fields will still be present in the Fields enum, but will be set to their zero value
-
-	// you can ignore errors if you don't care about them since the zero value
-	// for the returned record is valid
-	r, _ = db.LookupString("slksdmf skldmflskdmf")
-	fmt.Println(r.IsValid())                    // false
-	fmt.Println(r.Fields.Has(ip2location.City)) // false
-	fmt.Println(r.City == "")                   // true
-	writeJSON(r)
-}
-
-func writeJSON(obj any) {
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "    ")
-	enc.Encode(obj)
 }
 ```
 
-## Database updates
+<details><summary>Output:</summary>
 
-1. If additional header fields or logic is required, edit `internal/dbgen.tmpl`.
-2. If a new database type is available, increment `DBTypeMax` and add additional
-   offsets for each field as necessary in `*/codegen.go` files.
-3. If new fields are available, add new calls to the `(*internal.DBInfo).Doc`
-   field helpers in `*/codegen.go` files.
-4. If new/updated field documentation is available, add/update calls to
-   `(*internal.DBInfo).Doc` in `*/codegen.go` files.
-5. Run `go generate ./...` to regenerate the database parsers, and test as
-   necessary.
-6. Commit the changes to all files.
+```
+IP2Location 2022-10-29 DB11 [city,country_code,country_name,latitude,longitude,region,time_zone,zip_code] (IPv4+IPv6)
+
+IP2Location<DB11>{
+  city "Mountain View"
+  country_code "US"
+  country_name "United States of America"
+  latitude 37.40599
+  longitude -122.078514
+  region "California"
+  time_zone "-07:00"
+  zip_code "94043"
+}
+
+Test: US California
+
+Get(Latitude): 37.40599
+GetString(Latitude): "37.40599", true
+GetFloat32(Latitude): 37.40599, true
+
+Get(ISP): <nil>
+GetString(ISP): "", false
+GetString(ISP): "", false
+```
+
+</details>
