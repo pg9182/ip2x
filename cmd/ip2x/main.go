@@ -28,7 +28,7 @@ func init() {
 
 func main() {
 	args, err := pparse(flag.CommandLine, os.Args)
-	if err != nil || len(args) <= 1 {
+	if err != nil || len(args) < 1 {
 		flag.Usage()
 		os.Exit(2)
 	}
