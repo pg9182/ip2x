@@ -29,7 +29,7 @@ func (p DBProduct) FormatType(t DBType) string {
 
 // SupportsType returns true if p supports variant t.
 func (p DBProduct) SupportsType(t DBType) bool {
-	return p != 0 && t != 0 && p < dbProductUpper && t < dbTypeUpper && dbexpcols[t][p] != 0
+	return getdbcols(p, t) != 0
 }
 
 // DBType represents an IP2Location database variant. Each database type
@@ -99,7 +99,7 @@ func New(r io.ReaderAt) (*DB, error) {
 	if !db.prcode.SupportsType(db.dbtype) {
 		return nil, errors.New("unsupported database " + db.prcode.FormatProduct(db.dbtype))
 	}
-	if ecol := dbexpcols[db.dbtype][db.prcode]; db.dbcolumn != ecol {
+	if ecol := getdbcols(db.prcode, db.dbtype); db.dbcolumn != ecol {
 		return nil, errors.New("database is corrupt or library is buggy: db " + db.prcode.FormatProduct(db.dbtype) + ": expected " + strconv.Itoa(int(ecol)) + "  cols, got " + strconv.Itoa(int(db.dbcolumn)))
 	}
 	return &db, nil
@@ -156,10 +156,7 @@ func (db *DB) Version() string {
 
 // Has returns true if the database contains f.
 func (db *DB) Has(f DBField) bool {
-	if db.dbtype >= dbTypeUpper || db.prcode >= dbProductUpper || f >= dbFieldUpper || f < 0 {
-		return false
-	}
-	return dbfds[db.dbtype][db.prcode][f].IsValid()
+	return getdbfd(db.prcode, db.dbtype, f).IsValid()
 }
 
 // HasIPv4 returns true if the database contains IPv4 entries.
@@ -493,10 +490,7 @@ func (r Record) get(f DBField) (dt []byte, fd dbfd, err error) {
 	}
 
 	// get field descriptor
-	if r.t >= dbTypeUpper || r.p >= dbProductUpper || f >= dbFieldUpper || f < 0 {
-		return // no such field
-	}
-	if fd = dbfds[r.t][r.p][f]; !fd.IsValid() {
+	if fd = getdbfd(r.p, r.t, f); !fd.IsValid() {
 		return // no such field
 	}
 

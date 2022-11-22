@@ -237,8 +237,8 @@ const (
 type dbft uint8
 
 const (
-	dbft_string = 0
-	dbft_f32le  = 1
+	dbft_string dbft = 0
+	dbft_f32le  dbft = 1
 )
 
 type dbfd uint32
@@ -248,7 +248,14 @@ func (d dbfd) Column() uint32   { return uint32((^d >> 12) & 0xFF) }
 func (d dbfd) PtrOffset() uint8 { return uint8((^d >> 4) & 0xFF) }
 func (d dbfd) Type() dbft       { return dbft((^d >> 0) & 0xF) }
 
-var dbfds = [dbFieldUpper][dbProductUpper][dbFieldUpper]dbfd{
+func getdbfd(p DBProduct, t DBType, f DBField) dbfd {
+	if p >= dbProductUpper || t >= dbTypeUpper || f >= dbFieldUpper {
+		return 0
+	}
+	return _dbfd[t][p][f]
+}
+
+var _dbfd = [dbTypeUpper][dbProductUpper][dbFieldUpper]dbfd{
 	// ^|   FF   | column number (>1 since 1 is IPFrom)
 	// ^|     FF | ptr offset, or direct if FF
 	// ^|       F| storage type
@@ -720,7 +727,14 @@ var dbfds = [dbFieldUpper][dbProductUpper][dbFieldUpper]dbfd{
 	},
 }
 
-var dbexpcols = [dbFieldUpper][dbProductUpper]uint8{
+func getdbcols(p DBProduct, t DBType) uint8 {
+	if p >= dbProductUpper || t >= dbTypeUpper {
+		return 0
+	}
+	return _dbcols[t][p]
+}
+
+var _dbcols = [dbTypeUpper][dbProductUpper]uint8{
 	1: {
 		IP2Location: 2,
 		IP2Proxy:    2,

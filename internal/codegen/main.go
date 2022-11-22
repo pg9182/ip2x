@@ -618,8 +618,8 @@ func gen(ast *AST, cmd string) ([]byte, error) {
 
 	fmt.Fprintf(&buf, "\ntype dbft uint8\n\n")
 	fmt.Fprintf(&buf, "const (\n")
-	fmt.Fprintf(&buf, "\tdbft_string = %d\n", TypeStr)
-	fmt.Fprintf(&buf, "\tdbft_f32le = %d\n", TypeF32LE)
+	fmt.Fprintf(&buf, "\tdbft_string dbft = %d\n", TypeStr)
+	fmt.Fprintf(&buf, "\tdbft_f32le dbft = %d\n", TypeF32LE)
 	fmt.Fprintf(&buf, ")\n")
 
 	buf.WriteString("\ntype dbfd uint32\n\n")
@@ -628,7 +628,14 @@ func gen(ast *AST, cmd string) ([]byte, error) {
 	buf.WriteString("func (d dbfd) PtrOffset() uint8 { return uint8((^d >> 4) & 0xFF) }\n")
 	buf.WriteString("func (d dbfd) Type() dbft { return dbft((^d >> 0) & 0xF) }\n")
 
-	buf.WriteString("\nvar dbfds = [dbFieldUpper][dbProductUpper][dbFieldUpper]dbfd{\n")
+	buf.WriteString("\nfunc getdbfd(p DBProduct, t DBType, f DBField) dbfd {\n")
+	buf.WriteString("\tif p >= dbProductUpper || t >= dbTypeUpper || f >= dbFieldUpper {\n")
+	buf.WriteString("\t\treturn 0\n")
+	buf.WriteString("\t}\n")
+	buf.WriteString("\treturn _dbfd[t][p][f]\n")
+	buf.WriteString("}\n")
+
+	buf.WriteString("\nvar _dbfd = [dbTypeUpper][dbProductUpper][dbFieldUpper]dbfd{\n")
 	fmt.Fprintf(&buf, "\t// ^|   FF   | column number (>1 since 1 is IPFrom)\n")
 	fmt.Fprintf(&buf, "\t// ^|     FF | ptr offset, or direct if FF\n")
 	fmt.Fprintf(&buf, "\t// ^|       F| storage type\n")
@@ -661,7 +668,14 @@ func gen(ast *AST, cmd string) ([]byte, error) {
 	}
 	buf.WriteString("}\n")
 
-	buf.WriteString("\nvar dbexpcols = [dbFieldUpper][dbProductUpper]uint8{\n")
+	buf.WriteString("\nfunc getdbcols(p DBProduct, t DBType) uint8 {\n")
+	buf.WriteString("\tif p >= dbProductUpper || t >= dbTypeUpper {\n")
+	buf.WriteString("\t\treturn 0\n")
+	buf.WriteString("\t}\n")
+	buf.WriteString("\treturn _dbcols[t][p]\n")
+	buf.WriteString("}\n")
+
+	buf.WriteString("\nvar _dbcols = [dbTypeUpper][dbProductUpper]uint8{\n")
 	for t := uint8(0); t < ast.types; t++ {
 		fmt.Fprintf(&buf, "\t%d: {\n", t+1)
 		for _, d := range ast.Database {
