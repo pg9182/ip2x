@@ -42,7 +42,7 @@ func (t DBType) String() string {
 }
 
 // DBField represents a database column.
-type DBField int
+type DBField uint
 
 // String returns the name of the database column.
 func (f DBField) String() string {
