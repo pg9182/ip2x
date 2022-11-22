@@ -199,7 +199,7 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 	}
 
 	// unmap the ip address into a native v4/v6
-	ip, iplen := unmap(as_ip6_uint8(a))
+	ip, iplen := unmap(as_ip6_uint128(a))
 
 	// 4 bytes per column except for the first one (IPFrom)
 	colsize := uint32(iplen) + uint32(db.dbcolumn-1)*4
@@ -559,6 +559,13 @@ func as_le_u64(b []byte) uint64 {
 		uint64(b[4])<<32 | uint64(b[5])<<40 | uint64(b[6])<<48 | uint64(b[7])<<56
 }
 
+// as_be_u64 returns the uint64 represented by the little-endian b.
+func as_be_u64(b []byte) uint64 {
+	_ = b[7] // bounds check hint to compiler; see golang.org/issue/14808
+	return uint64(b[7]) | uint64(b[6])<<8 | uint64(b[5])<<16 | uint64(b[4])<<24 |
+		uint64(b[3])<<32 | uint64(b[2])<<40 | uint64(b[1])<<48 | uint64(b[0])<<56
+}
+
 // as_f32 returns the float32 represented by u.
 func as_f32(u uint32) float32 {
 	return *(*float32)(unsafe.Pointer(&u)) // math.Float32frombits
@@ -569,9 +576,14 @@ func as_strref_unsafe(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b)) // strings.Builder
 }
 
-// as_ip6_uint8 returns a as a uint128 representing a IPv4-mapped or native IPv6.
-func as_ip6_uint8(a netip.Addr) uint128 {
-	return *(*uint128)(unsafe.Pointer(&a))
+// as_ip6_uint128 returns a as a uint128 representing an IPv4-mapped or native
+// IPv6.
+func as_ip6_uint128(a netip.Addr) uint128 {
+	b := a.As16()
+	return uint128{
+		hi: as_be_u64(b[:8]),
+		lo: as_be_u64(b[8:]),
+	}
 }
 
 // as_u32_u128 returns u32 as a uint128.
