@@ -156,6 +156,9 @@ func (db *DB) Version() string {
 
 // Has returns true if the database contains f.
 func (db *DB) Has(f DBField) bool {
+	if db.dbtype >= dbTypeUpper || db.prcode >= dbProductUpper || f >= dbFieldUpper || f < 0 {
+		return false
+	}
 	return dbfds[db.dbtype][db.prcode][f].IsValid()
 }
 
@@ -206,6 +209,7 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 
 	// row buffer (columns + next IPFrom)
 	row := make([]byte, colsize+uint32(iplen))
+	_ = row[0:8] // bounds check hint (will always be at least IPFrom+IPTo)
 
 	// set the initial binary search range
 	var off, lower, upper uint32
@@ -227,8 +231,8 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 		if _, err = db.r.ReadAt(row[:8], int64(off)); err != nil {
 			return
 		}
-		lower = as_le_u32(row[0:])
-		upper = as_le_u32(row[4:])
+		lower = as_le_u32(row[0:4])
+		upper = as_le_u32(row[4:8])
 	}
 
 	// do the binary search
@@ -250,7 +254,7 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 		// get the row start/end range
 		var ipfrom, ipto uint128
 		if iplen == 4 {
-			ipfrom = as_u32_u128(as_le_u32(row))
+			ipfrom = as_u32_u128(as_le_u32(row[:4]))
 			ipto = as_u32_u128(as_le_u32(row[colsize:]))
 		} else {
 			ipfrom = as_be_u128(row)
@@ -489,6 +493,9 @@ func (r Record) get(f DBField) (dt []byte, fd dbfd, err error) {
 	}
 
 	// get field descriptor
+	if r.t >= dbTypeUpper || r.p >= dbProductUpper || f >= dbFieldUpper || f < 0 {
+		return // no such field
+	}
 	if fd = dbfds[r.t][r.p][f]; !fd.IsValid() {
 		return // no such field
 	}
@@ -593,10 +600,10 @@ func as_u32_u128(u32 uint32) uint128 {
 
 // as_be_u128 reads a big-endian uint128 from b.
 func as_be_u128(b []byte) uint128 {
-	_ = b[15] // bounds check hint to compiler; see golang.org/issue/14808
+	_ = b[0:15] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint128{
-		hi: as_le_u64(b[8:]),
-		lo: as_le_u64(b[0:]),
+		hi: as_le_u64(b[8:15]),
+		lo: as_le_u64(b[0:8]),
 	}
 }
 
