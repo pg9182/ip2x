@@ -2,12 +2,10 @@
 package ip2x
 
 import (
-	"bytes"
 	"errors"
 	"io"
 	"net/netip"
 	"strconv"
-	"strings"
 	"unsafe"
 )
 
@@ -109,33 +107,30 @@ func New(r io.ReaderAt) (*DB, error) {
 
 // String returns a human-readable string describing the database.
 func (db *DB) String() string {
-	var s strings.Builder
-	s.WriteString(db.prcode.FormatProduct(db.dbtype))
-	s.WriteByte(' ')
-	s.WriteString(db.Version())
-	s.WriteByte(' ')
-	s.WriteByte('[')
+	s := make([]byte, 256)
+	s = append(s, db.prcode.FormatProduct(db.dbtype)...)
+	s = append(s, ' ')
+	s = append(s, db.Version()...)
+	s = append(s, ' ', '[')
 	for n, f := 0, DBField(1); f < dbFieldUpper; f++ {
 		if db.Has(f) {
 			if n != 0 {
-				s.WriteByte(',')
+				s = append(s, ',')
 			}
-			s.WriteString(f.String())
+			s = append(s, f.String()...)
 			n++
 		}
 	}
-	s.WriteByte(']')
-	s.WriteByte(' ')
-	s.WriteByte('(')
+	s = append(s, ']', ' ', '(')
 	if v4, v6 := db.HasIPv4(), db.HasIPv6(); v4 && !v6 {
-		s.WriteString("IPv4")
+		s = append(s, "IPv4"...)
 	} else if !v4 && v6 {
-		s.WriteString("IPv6")
+		s = append(s, "IPv6"...)
 	} else {
-		s.WriteString("IPv4+IPv6")
+		s = append(s, "IPv4+IPv6"...)
 	}
-	s.WriteByte(')')
-	return s.String()
+	s = append(s, ')')
+	return as_strref_unsafe(s)
 }
 
 // Info returns the database product and type.
@@ -332,81 +327,81 @@ func (r Record) FormatString(color, multiline bool) string {
 	if !r.IsValid() {
 		return ""
 	}
-	var s strings.Builder
+	s := make([]byte, 0, 512)
 	if color {
-		s.WriteString("\x1b[34m")
+		s = append(s, "\x1b[34m"...)
 	}
-	s.WriteString(r.p.String())
+	s = append(s, r.p.String()...)
 	if color {
-		s.WriteString("\x1b[0m")
+		s = append(s, "\x1b[0m"...)
 	}
-	s.WriteByte('<')
-	s.WriteString(r.p.FormatType(r.t))
-	s.WriteByte('>')
+	s = append(s, '<')
+	s = append(s, r.p.FormatType(r.t)...)
+	s = append(s, '>')
 	if color {
-		s.WriteString("\x1b[0m")
+		s = append(s, "\x1b[0m"...)
 	}
 	if multiline {
-		s.WriteString("{\n  ")
+		s = append(s, "{\n  "...)
 	} else {
-		s.WriteByte('{')
+		s = append(s, '{')
 	}
 	for n, f := 0, DBField(1); f < dbFieldUpper; f++ {
 		if dt, fd, err := r.get(f); fd.IsValid() { // field exists
 			if n++; n > 1 {
 				if multiline {
-					s.WriteString("\n  ")
+					s = append(s, "\n  "...)
 				} else {
-					s.WriteByte(' ')
+					s = append(s, ' ')
 				}
 			}
 			if color {
-				s.WriteString("\x1b[35m")
+				s = append(s, "\x1b[35m"...)
 			}
-			s.WriteString(f.String())
+			s = append(s, f.String()...)
 			if color {
-				s.WriteString("\x1b[0m")
+				s = append(s, "\x1b[0m"...)
 			}
 			if multiline {
-				s.WriteString(" ")
+				s = append(s, " "...)
 			} else {
-				s.WriteByte('=')
+				s = append(s, '=')
 			}
 			if dt != nil {
 				switch fd.Type() {
 				case dbft_string:
 					if color {
-						s.WriteString("\x1b[33m")
+						s = append(s, "\x1b[33m"...)
 					}
-					s.WriteString(strconv.Quote(as_strref_unsafe(dt)))
+					s = strconv.AppendQuote(s, as_strref_unsafe(dt))
 				case dbft_f32le:
 					if color {
-						s.WriteString("\x1b[32m")
+						s = append(s, "\x1b[32m"...)
 					}
-					s.WriteString(strconv.FormatFloat(float64(as_f32(as_le_u32(dt))), 'f', -1, 32))
+					s = strconv.AppendFloat(s, float64(as_f32(as_le_u32(dt))), 'f', -1, 32)
 				}
 			} else if err != nil {
 				if color {
-					s.WriteString("\x1b[31m")
+					s = append(s, "\x1b[31m"...)
 				}
-				s.WriteString("<error: ")
-				s.WriteString(err.Error())
-				s.WriteByte('>')
+				s = append(s, "<error: "...)
+				s = append(s, err.Error()...)
+				s = append(s, '>')
 			}
 			if color {
-				s.WriteString("\x1b[0m")
+				s = append(s, "\x1b[0m"...)
 			}
 		}
 	}
 	if multiline {
-		s.WriteString("\n}")
+		s = append(s, "\n}"...)
 	} else {
-		s.WriteByte('}')
+		s = append(s, '}')
 	}
 	if color {
-		s.WriteString("\x1b[0m")
+		s = append(s, "\x1b[0m"...)
 	}
-	return s.String()
+	return as_strref_unsafe(s)
 }
 
 // MarshalJSON encodes the record as JSON.
@@ -414,29 +409,28 @@ func (r Record) MarshalJSON() ([]byte, error) {
 	if !r.IsValid() {
 		return []byte("null"), nil
 	}
-	var b bytes.Buffer
-	b.WriteByte('{')
+	b := make([]byte, 0, 256)
+	b = append(b, '{')
 	for n, f := 0, DBField(1); f < dbFieldUpper; f++ {
 		if dt, fd, err := r.get(f); dt != nil {
 			if n++; n > 1 {
-				b.WriteByte(',')
+				b = append(b, ',')
 			}
-			b.WriteByte('"')
-			b.WriteString(f.String())
-			b.WriteByte('"')
-			b.WriteByte(':')
+			b = append(b, '"')
+			b = append(b, f.String()...)
+			b = append(b, '"', ':')
 			switch fd.Type() {
 			case dbft_string:
-				b.WriteString(strconv.Quote(as_strref_unsafe(dt)))
+				b = strconv.AppendQuote(b, as_strref_unsafe(dt))
 			case dbft_f32le:
-				b.WriteString(strconv.FormatFloat(float64(as_f32(as_le_u32(dt))), 'f', -1, 32))
+				b = strconv.AppendFloat(b, float64(as_f32(as_le_u32(dt))), 'f', -1, 32)
 			}
 		} else if err != nil {
 			return nil, err
 		}
 	}
-	b.WriteByte('}')
-	return b.Bytes(), nil
+	b = append(b, '}')
+	return b, nil
 }
 
 // Get gets f as the default type. If an error occurs or the field is not
