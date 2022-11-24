@@ -596,7 +596,7 @@ func as_u32_u128(u32 uint32) uint128 {
 func as_be_u128(b []byte) uint128 {
 	_ = b[0:15] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint128{
-		hi: as_le_u64(b[8:15]),
+		hi: as_le_u64(b[8:16]),
 		lo: as_le_u64(b[0:8]),
 	}
 }
