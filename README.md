@@ -1,6 +1,6 @@
 # ip2x
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/pg9182/ip2x.svg)](https://pkg.go.dev/github.com/pg9182/ip2x)
+[![Go Reference](https://pkg.go.dev/badge/github.com/pg9182/ip2x.svg)](https://pkg.go.dev/github.com/pg9182/ip2x) [![test](https://github.com/pg9182/ip2x/actions/workflows/test.yml/badge.svg)](https://github.com/pg9182/ip2x/actions/workflows/test.yml)
 
 Module ip2x is an idiomatic, efficient, and robust library and command-line tool for querying [IP2Location](https://www.ip2location.com/) databases.
 

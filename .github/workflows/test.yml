@@ -1,0 +1,57 @@
+name: test
+
+on: push
+
+jobs:
+  go:
+    name: Go ${{matrix.go}} - ${{matrix.os}}
+    runs-on: ${{matrix.os}}
+
+    strategy:
+      matrix:
+        os: ['ubuntu-latest']
+        go: ['1.18.x', '1.19.x']
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        path: ip2x
+
+    - name: Checkout testdata
+      uses: actions/checkout@v3
+      with:
+        repository: pg9182/ip2x-testdata
+        ref: d77ab403210e209a73a224bb69c1304c1e954ca1
+        token: ${{secrets.IP2X_TESTDATA_TOKEN}}
+        path: testdata
+
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ${{matrix.go}}
+
+    - name: Setup testdata
+      run: zstd --output-dir-flat=. -d ../../testdata/IP2LOCATION-LITE-DB11.IPV6.BIN.zst
+      working-directory: ip2x/test
+
+    - name: Go generate
+      run: go generate && git diff --exit-code *.ip2x.go
+      working-directory: ip2x
+      if: matrix.go == '1.19.x'
+
+    - name: Go vet
+      run: go vet ./...
+      working-directory: ip2x
+
+    - name: Go staticcheck
+      run: go run honnef.co/go/tools/cmd/staticcheck@2022.1.3 ./...
+      working-directory: ip2x
+
+    - name: Go test (ip2x)
+      run: go test -v ./...
+      working-directory: ip2x
+
+    - name: Go test (ip2x/test)
+      run: go test -v ./...
+      working-directory: ip2x/test
