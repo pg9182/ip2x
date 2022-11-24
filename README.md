@@ -6,20 +6,18 @@ Module ip2x is an idiomatic, efficient, and robust library and command-line tool
 
 Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2location/ip2location-go) and  [`github.com/ip2location/ip2proxy-go/v3`](https://github.com/ip2location/ip2proxy-go), this library:
 
-- Is written in idiomatic Go.
-- Is faster and has fewer allocations.
-- Only reads individual fields as requested.
-- Has more flexible type-independent getters.
-- Supports directly querying a [`net/netip.Addr`](https://pkg.go.dev/net/netip#Addr).
-- Exposes database metadata including version, product, available fields, and supported IP versions.
-- Handles all errors correctly.
-- Uses errors and zero values correctly instead of using arbitrary strings in field values.
-- Supports pretty-printing database records as text (optionally colored and/or
-  multiline).
-- Supports encoding database records as JSON.
-- Unifies the interface for both databases.
-- Has field documentation comments.
-- Uses code generation to reduce code duplication and potential bugs.
+- Supports Go 1.18+.
+- Supports querying using Go 1.18's new [`net/netip.Addr`](https://pkg.go.dev/net/netip) type, which is much more efficient than parsing the IP from a string every time.
+- Uses native integer types instead of `big.Int`, which is also much more efficient.
+- Is about 11x faster than this library when querying a single field, and 2x faster for all fields, while making a fraction of the number of allocations (2 for init, 1 for each lookup, plus 1 for each typed field get, or 2 for an untyped one).
+- Has comprehensive built-in [documentation](https://pkg.go.dev/github.com/pg9182/ip2x), including automatically-generated information about which fields are available in different product types.
+- Supports querying information about the database itself, for example, whether it supports IPv6, and which fields are available.
+- Has a more fluent and flexible API (e.g., `record.Get(ip2x.Latitude)`, `record.GetString(ip2x.Latitude)`, `record.GetFloat(ip2x.Latitude)`)
+- Has built-in support for pretty-printing records as strings or JSON.
+- Supports both IP2Location databases in a single package with a unified API.
+- Uses code generation to simplify adding new products/types/fields/documentation while reducing the likelihood of bugs ([input](./dbdata.go), [docs](https://pkg.go.dev/github.com/pg9182/ip2x/internal/codegen)).
+- Is written in idiomatic Go: correct error handling (rather than stuffing error strings into the record struct), useful zero values (an empty record will work properly), proper type names, etc.
+- Has [tests](./test/correctness_test.go) to ensure the output is consistent with this library, that a range of IPv4 (and their possible IPv6-mappings) address work correctly, and other things. There are also [fuzz](./test/fuzz_test.go) tests to ensure IPs can't crash the library and are IPv4/v6-mapped correctly.
 
 ## Benchmark
 
