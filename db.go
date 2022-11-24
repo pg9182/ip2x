@@ -112,7 +112,7 @@ func (db *DB) String() string {
 	s = append(s, ' ')
 	s = append(s, db.Version()...)
 	s = append(s, ' ', '[')
-	for n, f := 0, DBField(1); f < dbFieldUpper; f++ {
+	for n, f := 0, DBField(1); f <= dbFieldMax; f++ {
 		if db.Has(f) {
 			if n != 0 {
 				s = append(s, ',')
@@ -172,7 +172,7 @@ func (db *DB) HasIPv6() bool {
 // EachField calls fn for each column in the database until fn returns false.
 func (db *DB) EachField(fn func(DBField) bool) {
 	if fn != nil {
-		for f := DBField(1); f < dbFieldUpper; f++ {
+		for f := DBField(1); f <= dbFieldMax; f++ {
 			if db.Has(f) {
 				if !fn(f) {
 					return
@@ -347,7 +347,7 @@ func (r Record) FormatString(color, multiline bool) string {
 	} else {
 		s = append(s, '{')
 	}
-	for n, f := 0, DBField(1); f < dbFieldUpper; f++ {
+	for n, f := 0, DBField(1); f <= dbFieldMax; f++ {
 		if dt, fd, err := r.get(f); fd.IsValid() { // field exists
 			if n++; n > 1 {
 				if multiline {
@@ -412,7 +412,7 @@ func (r Record) MarshalJSON() ([]byte, error) {
 	}
 	b := make([]byte, 0, 256)
 	b = append(b, '{')
-	for n, f := 0, DBField(1); f < dbFieldUpper; f++ {
+	for n, f := 0, DBField(1); f <= dbFieldMax; f++ {
 		if dt, fd, err := r.get(f); dt != nil {
 			if n++; n > 1 {
 				b = append(b, ',')
