@@ -37,7 +37,7 @@ func testCorrectnessIPv4Bits(t *testing.T, bits int) {
 	t.Logf("bits: %d (%d addresses)", bits, bits)
 
 	const maxErrors = 100
-	var numErrors atomic.Uint64
+	var numErrors uint64
 
 	var wg sync.WaitGroup
 	threads := runtime.NumCPU()
@@ -45,7 +45,7 @@ func testCorrectnessIPv4Bits(t *testing.T, bits int) {
 	t.Logf("threads: %d", threads)
 
 	const progressBits = 5 // emit progress 2^progressBits times
-	var done atomic.Uint32
+	var done uint32
 
 	start := time.Now()
 	for thread := 0; thread < threads; thread++ {
@@ -56,7 +56,7 @@ func testCorrectnessIPv4Bits(t *testing.T, bits int) {
 			runtime.LockOSThread()
 
 			for i, u := uint32(0), uint32(1)<<uint32(bits)-1; i <= upper; i++ {
-				if numErrors.Load() >= maxErrors {
+				if atomic.LoadUint64(&numErrors) >= maxErrors {
 					return
 				}
 				if i%uint32(threads) != uint32(thread) {
@@ -64,7 +64,7 @@ func testCorrectnessIPv4Bits(t *testing.T, bits int) {
 				}
 
 				n := i << (32 - bits)
-				if done := done.Add(1); n<<progressBits == 0 {
+				if done := atomic.AddUint32(&done, 1); n<<progressBits == 0 {
 					pct := 100 * float64(i>>(bits-progressBits)) / float64((uint32(1)<<progressBits - 1))
 					rem := u - i
 					if i == 0 {
@@ -85,14 +85,14 @@ func testCorrectnessIPv4Bits(t *testing.T, bits int) {
 				a := netip.AddrFrom4(b)
 				if err := testCorrectness(a); err != nil {
 					t.Errorf("%s: %v", a, err)
-					numErrors.Add(1)
+					atomic.AddUint64(&numErrors, 1)
 				}
 			}
 		}()
 	}
 
 	wg.Wait()
-	if numErrors.Load() >= maxErrors {
+	if atomic.LoadUint64(&numErrors) >= maxErrors {
 		t.Fatalf("too many errors")
 	}
 }
