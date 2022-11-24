@@ -21,6 +21,34 @@ Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2l
 - Has field documentation comments.
 - Uses code generation to reduce code duplication and potential bugs.
 
+## Benchmark
+
+The code for the benchmark can be found in [benchmark_test.go](./test/benchmark_test.go).
+
+- Benchmarks are done using a balanced variety of IP addresses in both small and large subnets, as both IPv4 and IPv6 (native, v4-mapped, 6to4, and teredo). This ensures database indexing and IP parsing/normalization is tested fairly.
+- A test to ensure results from both libraries are the same exists to ensure correctness.
+- The entire DB is loaded into memory to ensure the disk cache does not affect results.
+
+```
+db: IP2Location DB11 2022-10-29 [city,country_code,country_name,latitude,longitude,region,time_zone,zip_code] (IPv4+IPv6)
+goos: linux
+goarch: amd64
+pkg: github.com/pg9182/ip2x/test
+cpu: AMD Ryzen 5 5600G with Radeon Graphics         
+BenchmarkIP2x_Init-12                           15332440                65.29 ns/op          128 B/op          2 allocs/op
+BenchmarkIP2x_LookupOnly-12                     17275036                66.01 ns/op           48 B/op          1 allocs/op
+BenchmarkIP2x_GetAll-12                          1629045               728.5 ns/op          1688 B/op         14 allocs/op
+BenchmarkIP2x_GetOneString-12                    6355293               161.9 ns/op           304 B/op          2 allocs/op
+BenchmarkIP2x_GetOneFloat-12                    13574359                84.08 ns/op           48 B/op          1 allocs/op
+BenchmarkIP2x_GetNonexistent-12                 13337013                85.25 ns/op           48 B/op          1 allocs/op
+BenchmarkIP2LocationV9_Init-12                    845677              1385 ns/op             400 B/op          7 allocs/op
+BenchmarkIP2LocationV9_LookupOnly-12             1574793               777.8 ns/op           672 B/op         24 allocs/op
+BenchmarkIP2LocationV9_GetAll-12                  798849              1505 ns/op            2268 B/op         36 allocs/op
+BenchmarkIP2LocationV9_GetOneString-12           1286278               904.2 ns/op           936 B/op         26 allocs/op
+BenchmarkIP2LocationV9_GetOneFloat-12            1221736               837.2 ns/op           672 B/op         24 allocs/op
+BenchmarkIP2LocationV9_GetNonexistent-12         1388937               816.1 ns/op           672 B/op         24 allocs/op
+```
+
 ## CLI
 
 ```
