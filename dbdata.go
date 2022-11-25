@@ -68,18 +68,18 @@ str@0 provider              .  .  .  .  .  .  .  .  .  . 13
 //   - (U) Unicast - One to one
 //   - (M) Multicast - One to multiple
 //   - (B) Broadcast - One to all
-const AddressType codegen.Column = "address_type"
+const AddressType codegen.Field = "address_type"
 
 // A varying length number assigned to geographic areas for call between cities.
 //
 // See https://www.ip2location.com/area-code-coverage.
-const AreaCode codegen.Column = "area_code"
+const AreaCode codegen.Field = "area_code"
 
 // Autonomous system number (ASN).
-const AS codegen.Column = "as"
+const AS codegen.Field = "as"
 
 // Autonomous system (AS) name.
-const ASN codegen.Column = "asn"
+const ASN codegen.Field = "asn"
 
 // The domain category is based on IAB Tech Lab Content Taxonomy.
 //
@@ -88,60 +88,60 @@ const ASN codegen.Column = "asn"
 // filtering appliances.
 //
 // See https://www.ip2location.com/free/iab-categories.
-const Category codegen.Column = "category"
+const Category codegen.Field = "category"
 
 // City name.
-const City codegen.Column = "city"
+const City codegen.Field = "city"
 
 // Two-character country code based on ISO 3166.
-const CountryCode codegen.Column = "country_code"
+const CountryCode codegen.Field = "country_code"
 
 // Country name based on ISO 3166.
-const CountryName codegen.Column = "country_name"
+const CountryName codegen.Field = "country_name"
 
 // Internet domain name associated with IP address range.
-const Domain codegen.Column = "domain"
+const Domain codegen.Field = "domain"
 
 // Average height of city above sea level in meters (m).
-const Elevation codegen.Column = "elevation"
+const Elevation codegen.Field = "elevation"
 
 // The IDD prefix to call the city from another country.
-const IDDCode codegen.Column = "idd_code"
+const IDDCode codegen.Field = "idd_code"
 
 // Internet Service Provider or company's name.
-const ISP codegen.Column = "isp"
+const ISP codegen.Field = "isp"
 
 // Proxy last seen in days.
-const LastSeen codegen.Column = "last_seen"
+const LastSeen codegen.Field = "last_seen"
 
 // City latitude. Defaults to capital city latitude if city is unknown.
-const Latitude codegen.Column = "latitude"
+const Latitude codegen.Field = "latitude"
 
 // City longitude. Defaults to capital city longitude if city is unknown.
-const Longitude codegen.Column = "longitude"
+const Longitude codegen.Field = "longitude"
 
 // Mobile Country Codes (MCC) as defined in ITU E.212 for use in identifying
 // mobile stations in wireless telephone networks, particularly GSM and UMTS
 // networks.
-const MCC codegen.Column = "mcc"
+const MCC codegen.Field = "mcc"
 
 // Mobile Network Code (MNC) is used in combination with a Mobile Country Code
 // (MCC) to uniquely identify a mobile phone operator or carrier.
-const MNC codegen.Column = "mnc"
+const MNC codegen.Field = "mnc"
 
 // Commercial brand associated with the mobile carrier.
 //
 // See https://www.ip2location.com/mobile-carrier-coverage.
-const MobileBrand codegen.Column = "mobile_brand"
+const MobileBrand codegen.Field = "mobile_brand"
 
 // Internet Connection Type
 //   - (DIAL) dial up
 //   - (DSL) broadband/cable/fiber/mobile
 //   - (COMP) company/T1
-const NetSpeed codegen.Column = "net_speed"
+const NetSpeed codegen.Field = "net_speed"
 
 // Name of VPN provider if available.
-const Provider codegen.Column = "provider"
+const Provider codegen.Field = "provider"
 
 // Type of proxy.
 //   - (VPN) Anonymizing VPN services. These services offer users a publicly
@@ -168,19 +168,19 @@ const Provider codegen.Column = "provider"
 //   - (RES) Residential proxies. These services offer users proxy connections
 //     through residential ISP with or without consents of peers to share their
 //     idle resources. Only available with PX10 & PX11. Anonymity: Medium.
-const ProxyType codegen.Column = "proxy_type"
+const ProxyType codegen.Field = "proxy_type"
 
 // Region or state name.
-const Region codegen.Column = "region"
+const Region codegen.Field = "region"
 
 // Security threat reported.
 //   - (SPAM) Email and forum spammers
 //   - (SCANNER) Network security scanners
 //   - (BOTNET) Malware infected devices
-const Threat codegen.Column = "threat"
+const Threat codegen.Field = "threat"
 
 // UTC time zone (with DST supported).
-const Timezone codegen.Column = "time_zone"
+const Timezone codegen.Field = "time_zone"
 
 // Usage type classification of ISP or company.
 //   - (COM) Commercial
@@ -195,15 +195,15 @@ const Timezone codegen.Column = "time_zone"
 //   - (DCH) Data Center/Web Hosting/Transit
 //   - (SES) Search Engine Spider
 //   - (RSV) Reserved
-const UsageType codegen.Column = "usage_type"
+const UsageType codegen.Field = "usage_type"
 
 // The special code to identify the nearest weather observation station.
-const WeatherStationCode codegen.Column = "weather_station_code"
+const WeatherStationCode codegen.Field = "weather_station_code"
 
 // The name of the nearest weather observation station.
-const WeatherStationName codegen.Column = "weather_station_name"
+const WeatherStationName codegen.Field = "weather_station_name"
 
 // ZIP code or Postal code.
 //
 // See https://www.ip2location.com/zip-code-coverage.
-const Zipcode codegen.Column = "zip_code"
+const Zipcode codegen.Field = "zip_code"

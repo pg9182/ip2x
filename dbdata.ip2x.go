@@ -14,14 +14,12 @@ import "strconv"
 // domain name, net speed, area code, weather station code, weather station
 // name, mobile country code (MCC), mobile network code (MNC) and carrier brand,
 // elevation, usage type, address type and advertising category.
-//
 // Up to DB25.
 const IP2Location DBProduct = 1
 
 // IP2Proxy™ Proxy Detection Database contains IP addresses which are used as VPN
 // anonymizer, open proxies, web proxies and Tor exits, data center, web hosting
 // (DCH) range, search engine robots (SES) and residential proxies (RES).
-//
 // Up to PX11.
 const IP2Proxy DBProduct = 2
 
@@ -227,502 +225,99 @@ const WeatherStationName DBField = 27
 // In DB9-12, DB14-16, DB18, DB20-22, DB24-25.
 const Zipcode DBField = 28
 
-const (
-	dbProductMax   = DBProduct(2)
-	dbTypeMax      = DBType(25)
-	dbFieldMax     = DBField(28)
-	dbFieldColumns = dbFieldMax + 1
-)
-
-type dbft uint8
-
-const (
-	dbft_string dbft = 0
-	dbft_f32le  dbft = 1
-)
-
-type dbfd uint32
-
-func (d dbfd) IsValid() bool    { return d != 0 }
-func (d dbfd) Column() uint32   { return uint32((^d >> 12) & 0xFF) }
-func (d dbfd) PtrOffset() uint8 { return uint8((^d >> 4) & 0xFF) }
-func (d dbfd) Type() dbft       { return dbft((^d >> 0) & 0xF) }
-
-func getdbfd(p DBProduct, t DBType, f DBField) dbfd {
-	if p > dbProductMax || t > dbTypeMax || f > dbFieldMax {
-		return 0
-	}
-	return _dbfd[p][t][f]
-}
-
-func getdbcols(p DBProduct, t DBType) uint8 {
-	if p > dbProductMax || t >= dbTypeMax {
-		return 0
-	}
-	return uint8(_dbfd[p][t][dbFieldColumns])
-}
-
-var _dbfd = [dbProductMax + 1][dbTypeMax + 1][dbFieldMax + 2]dbfd{
-	// ^|   FF   | column number (>1 since 1 is IPFrom)
-	// ^|     FF | ptr offset, or direct if FF
-	// ^|       F| storage type
+var _dbs = dbs{
 	IP2Location: {
-		1: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			dbFieldColumns: 2,
-		},
-		2: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			ISP:            ^dbfd(0x03000),
-			dbFieldColumns: 3,
-		},
-		3: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			dbFieldColumns: 4,
-		},
-		4: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			ISP:            ^dbfd(0x05000),
-			dbFieldColumns: 5,
-		},
-		5: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			dbFieldColumns: 6,
-		},
-		6: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			ISP:            ^dbfd(0x07000),
-			dbFieldColumns: 7,
-		},
-		7: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			ISP:            ^dbfd(0x05000),
-			Domain:         ^dbfd(0x06000),
-			dbFieldColumns: 6,
-		},
-		8: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			ISP:            ^dbfd(0x07000),
-			Domain:         ^dbfd(0x08000),
-			dbFieldColumns: 8,
-		},
-		9: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			Zipcode:        ^dbfd(0x07000),
-			dbFieldColumns: 7,
-		},
-		10: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			Zipcode:        ^dbfd(0x07000),
-			ISP:            ^dbfd(0x08000),
-			Domain:         ^dbfd(0x09000),
-			dbFieldColumns: 9,
-		},
-		11: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			Zipcode:        ^dbfd(0x07000),
-			Timezone:       ^dbfd(0x08000),
-			dbFieldColumns: 8,
-		},
-		12: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			Zipcode:        ^dbfd(0x07000),
-			Timezone:       ^dbfd(0x08000),
-			ISP:            ^dbfd(0x09000),
-			Domain:         ^dbfd(0x0A000),
-			dbFieldColumns: 10,
-		},
-		13: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			Timezone:       ^dbfd(0x07000),
-			NetSpeed:       ^dbfd(0x08000),
-			dbFieldColumns: 8,
-		},
-		14: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			Zipcode:        ^dbfd(0x07000),
-			Timezone:       ^dbfd(0x08000),
-			ISP:            ^dbfd(0x09000),
-			Domain:         ^dbfd(0x0A000),
-			NetSpeed:       ^dbfd(0x0B000),
-			dbFieldColumns: 11,
-		},
-		15: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			Zipcode:        ^dbfd(0x07000),
-			Timezone:       ^dbfd(0x08000),
-			IDDCode:        ^dbfd(0x09000),
-			AreaCode:       ^dbfd(0x0A000),
-			dbFieldColumns: 10,
-		},
-		16: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			Zipcode:        ^dbfd(0x07000),
-			Timezone:       ^dbfd(0x08000),
-			ISP:            ^dbfd(0x09000),
-			Domain:         ^dbfd(0x0A000),
-			NetSpeed:       ^dbfd(0x0B000),
-			IDDCode:        ^dbfd(0x0C000),
-			AreaCode:       ^dbfd(0x0D000),
-			dbFieldColumns: 13,
-		},
-		17: {
-			CountryCode:        ^dbfd(0x02000),
-			CountryName:        ^dbfd(0x02030),
-			Region:             ^dbfd(0x03000),
-			City:               ^dbfd(0x04000),
-			Latitude:           ^dbfd(0x05FF1),
-			Longitude:          ^dbfd(0x06FF1),
-			Timezone:           ^dbfd(0x07000),
-			NetSpeed:           ^dbfd(0x08000),
-			WeatherStationCode: ^dbfd(0x09000),
-			WeatherStationName: ^dbfd(0x0A000),
-			dbFieldColumns:     10,
-		},
-		18: {
-			CountryCode:        ^dbfd(0x02000),
-			CountryName:        ^dbfd(0x02030),
-			Region:             ^dbfd(0x03000),
-			City:               ^dbfd(0x04000),
-			Latitude:           ^dbfd(0x05FF1),
-			Longitude:          ^dbfd(0x06FF1),
-			Zipcode:            ^dbfd(0x07000),
-			Timezone:           ^dbfd(0x08000),
-			ISP:                ^dbfd(0x09000),
-			Domain:             ^dbfd(0x0A000),
-			NetSpeed:           ^dbfd(0x0B000),
-			IDDCode:            ^dbfd(0x0C000),
-			AreaCode:           ^dbfd(0x0D000),
-			WeatherStationCode: ^dbfd(0x0E000),
-			WeatherStationName: ^dbfd(0x0F000),
-			dbFieldColumns:     15,
-		},
-		19: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			ISP:            ^dbfd(0x07000),
-			Domain:         ^dbfd(0x08000),
-			MCC:            ^dbfd(0x09000),
-			MNC:            ^dbfd(0x0A000),
-			MobileBrand:    ^dbfd(0x0B000),
-			dbFieldColumns: 11,
-		},
-		20: {
-			CountryCode:        ^dbfd(0x02000),
-			CountryName:        ^dbfd(0x02030),
-			Region:             ^dbfd(0x03000),
-			City:               ^dbfd(0x04000),
-			Latitude:           ^dbfd(0x05FF1),
-			Longitude:          ^dbfd(0x06FF1),
-			Zipcode:            ^dbfd(0x07000),
-			Timezone:           ^dbfd(0x08000),
-			ISP:                ^dbfd(0x09000),
-			Domain:             ^dbfd(0x0A000),
-			NetSpeed:           ^dbfd(0x0B000),
-			IDDCode:            ^dbfd(0x0C000),
-			AreaCode:           ^dbfd(0x0D000),
-			WeatherStationCode: ^dbfd(0x0E000),
-			WeatherStationName: ^dbfd(0x0F000),
-			MCC:                ^dbfd(0x10000),
-			MNC:                ^dbfd(0x11000),
-			MobileBrand:        ^dbfd(0x12000),
-			dbFieldColumns:     18,
-		},
-		21: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			Zipcode:        ^dbfd(0x07000),
-			Timezone:       ^dbfd(0x08000),
-			IDDCode:        ^dbfd(0x09000),
-			AreaCode:       ^dbfd(0x0A000),
-			Elevation:      ^dbfd(0x0B000),
-			dbFieldColumns: 11,
-		},
-		22: {
-			CountryCode:        ^dbfd(0x02000),
-			CountryName:        ^dbfd(0x02030),
-			Region:             ^dbfd(0x03000),
-			City:               ^dbfd(0x04000),
-			Latitude:           ^dbfd(0x05FF1),
-			Longitude:          ^dbfd(0x06FF1),
-			Zipcode:            ^dbfd(0x07000),
-			Timezone:           ^dbfd(0x08000),
-			ISP:                ^dbfd(0x09000),
-			Domain:             ^dbfd(0x0A000),
-			NetSpeed:           ^dbfd(0x0B000),
-			IDDCode:            ^dbfd(0x0C000),
-			AreaCode:           ^dbfd(0x0D000),
-			WeatherStationCode: ^dbfd(0x0E000),
-			WeatherStationName: ^dbfd(0x0F000),
-			MCC:                ^dbfd(0x10000),
-			MNC:                ^dbfd(0x11000),
-			MobileBrand:        ^dbfd(0x12000),
-			Elevation:          ^dbfd(0x13000),
-			dbFieldColumns:     19,
-		},
-		23: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			Region:         ^dbfd(0x03000),
-			City:           ^dbfd(0x04000),
-			Latitude:       ^dbfd(0x05FF1),
-			Longitude:      ^dbfd(0x06FF1),
-			ISP:            ^dbfd(0x07000),
-			Domain:         ^dbfd(0x08000),
-			MCC:            ^dbfd(0x09000),
-			MNC:            ^dbfd(0x0A000),
-			MobileBrand:    ^dbfd(0x0B000),
-			UsageType:      ^dbfd(0x0C000),
-			dbFieldColumns: 12,
-		},
-		24: {
-			CountryCode:        ^dbfd(0x02000),
-			CountryName:        ^dbfd(0x02030),
-			Region:             ^dbfd(0x03000),
-			City:               ^dbfd(0x04000),
-			Latitude:           ^dbfd(0x05FF1),
-			Longitude:          ^dbfd(0x06FF1),
-			Zipcode:            ^dbfd(0x07000),
-			Timezone:           ^dbfd(0x08000),
-			ISP:                ^dbfd(0x09000),
-			Domain:             ^dbfd(0x0A000),
-			NetSpeed:           ^dbfd(0x0B000),
-			IDDCode:            ^dbfd(0x0C000),
-			AreaCode:           ^dbfd(0x0D000),
-			WeatherStationCode: ^dbfd(0x0E000),
-			WeatherStationName: ^dbfd(0x0F000),
-			MCC:                ^dbfd(0x10000),
-			MNC:                ^dbfd(0x11000),
-			MobileBrand:        ^dbfd(0x12000),
-			Elevation:          ^dbfd(0x13000),
-			UsageType:          ^dbfd(0x14000),
-			dbFieldColumns:     20,
-		},
-		25: {
-			CountryCode:        ^dbfd(0x02000),
-			CountryName:        ^dbfd(0x02030),
-			Region:             ^dbfd(0x03000),
-			City:               ^dbfd(0x04000),
-			Latitude:           ^dbfd(0x05FF1),
-			Longitude:          ^dbfd(0x06FF1),
-			Zipcode:            ^dbfd(0x07000),
-			Timezone:           ^dbfd(0x08000),
-			ISP:                ^dbfd(0x09000),
-			Domain:             ^dbfd(0x0A000),
-			NetSpeed:           ^dbfd(0x0B000),
-			IDDCode:            ^dbfd(0x0C000),
-			AreaCode:           ^dbfd(0x0D000),
-			WeatherStationCode: ^dbfd(0x0E000),
-			WeatherStationName: ^dbfd(0x0F000),
-			MCC:                ^dbfd(0x10000),
-			MNC:                ^dbfd(0x11000),
-			MobileBrand:        ^dbfd(0x12000),
-			Elevation:          ^dbfd(0x13000),
-			UsageType:          ^dbfd(0x14000),
-			AddressType:        ^dbfd(0x15000),
-			Category:           ^dbfd(0x16000),
-			dbFieldColumns:     22,
-		},
+		1:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, dbField_columns: 2, dbField_dbs: dbI(IP2Location)<<8 | 1},
+		2:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, ISP: dbI(dbtype_str) | 3<<4, dbField_columns: 3, dbField_dbs: dbI(IP2Location)<<8 | 2},
+		3:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, dbField_columns: 4, dbField_dbs: dbI(IP2Location)<<8 | 3},
+		4:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, ISP: dbI(dbtype_str) | 5<<4, dbField_columns: 5, dbField_dbs: dbI(IP2Location)<<8 | 4},
+		5:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, dbField_columns: 6, dbField_dbs: dbI(IP2Location)<<8 | 5},
+		6:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, ISP: dbI(dbtype_str) | 7<<4, dbField_columns: 7, dbField_dbs: dbI(IP2Location)<<8 | 6},
+		7:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, ISP: dbI(dbtype_str) | 5<<4, Domain: dbI(dbtype_str) | 6<<4, dbField_columns: 6, dbField_dbs: dbI(IP2Location)<<8 | 7},
+		8:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, ISP: dbI(dbtype_str) | 7<<4, Domain: dbI(dbtype_str) | 8<<4, dbField_columns: 8, dbField_dbs: dbI(IP2Location)<<8 | 8},
+		9:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, dbField_columns: 7, dbField_dbs: dbI(IP2Location)<<8 | 9},
+		10: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, ISP: dbI(dbtype_str) | 8<<4, Domain: dbI(dbtype_str) | 9<<4, dbField_columns: 9, dbField_dbs: dbI(IP2Location)<<8 | 10},
+		11: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, dbField_columns: 8, dbField_dbs: dbI(IP2Location)<<8 | 11},
+		12: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, ISP: dbI(dbtype_str) | 9<<4, Domain: dbI(dbtype_str) | 10<<4, dbField_columns: 10, dbField_dbs: dbI(IP2Location)<<8 | 12},
+		13: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Timezone: dbI(dbtype_str) | 7<<4, NetSpeed: dbI(dbtype_str) | 8<<4, dbField_columns: 8, dbField_dbs: dbI(IP2Location)<<8 | 13},
+		14: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, ISP: dbI(dbtype_str) | 9<<4, Domain: dbI(dbtype_str) | 10<<4, NetSpeed: dbI(dbtype_str) | 11<<4, dbField_columns: 11, dbField_dbs: dbI(IP2Location)<<8 | 14},
+		15: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, IDDCode: dbI(dbtype_str) | 9<<4, AreaCode: dbI(dbtype_str) | 10<<4, dbField_columns: 10, dbField_dbs: dbI(IP2Location)<<8 | 15},
+		16: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, ISP: dbI(dbtype_str) | 9<<4, Domain: dbI(dbtype_str) | 10<<4, NetSpeed: dbI(dbtype_str) | 11<<4, IDDCode: dbI(dbtype_str) | 12<<4, AreaCode: dbI(dbtype_str) | 13<<4, dbField_columns: 13, dbField_dbs: dbI(IP2Location)<<8 | 16},
+		17: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Timezone: dbI(dbtype_str) | 7<<4, NetSpeed: dbI(dbtype_str) | 8<<4, WeatherStationCode: dbI(dbtype_str) | 9<<4, WeatherStationName: dbI(dbtype_str) | 10<<4, dbField_columns: 10, dbField_dbs: dbI(IP2Location)<<8 | 17},
+		18: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, ISP: dbI(dbtype_str) | 9<<4, Domain: dbI(dbtype_str) | 10<<4, NetSpeed: dbI(dbtype_str) | 11<<4, IDDCode: dbI(dbtype_str) | 12<<4, AreaCode: dbI(dbtype_str) | 13<<4, WeatherStationCode: dbI(dbtype_str) | 14<<4, WeatherStationName: dbI(dbtype_str) | 15<<4, dbField_columns: 15, dbField_dbs: dbI(IP2Location)<<8 | 18},
+		19: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, ISP: dbI(dbtype_str) | 7<<4, Domain: dbI(dbtype_str) | 8<<4, MCC: dbI(dbtype_str) | 9<<4, MNC: dbI(dbtype_str) | 10<<4, MobileBrand: dbI(dbtype_str) | 11<<4, dbField_columns: 11, dbField_dbs: dbI(IP2Location)<<8 | 19},
+		20: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, ISP: dbI(dbtype_str) | 9<<4, Domain: dbI(dbtype_str) | 10<<4, NetSpeed: dbI(dbtype_str) | 11<<4, IDDCode: dbI(dbtype_str) | 12<<4, AreaCode: dbI(dbtype_str) | 13<<4, WeatherStationCode: dbI(dbtype_str) | 14<<4, WeatherStationName: dbI(dbtype_str) | 15<<4, MCC: dbI(dbtype_str) | 16<<4, MNC: dbI(dbtype_str) | 17<<4, MobileBrand: dbI(dbtype_str) | 18<<4, dbField_columns: 18, dbField_dbs: dbI(IP2Location)<<8 | 20},
+		21: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, IDDCode: dbI(dbtype_str) | 9<<4, AreaCode: dbI(dbtype_str) | 10<<4, Elevation: dbI(dbtype_str) | 11<<4, dbField_columns: 11, dbField_dbs: dbI(IP2Location)<<8 | 21},
+		22: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, ISP: dbI(dbtype_str) | 9<<4, Domain: dbI(dbtype_str) | 10<<4, NetSpeed: dbI(dbtype_str) | 11<<4, IDDCode: dbI(dbtype_str) | 12<<4, AreaCode: dbI(dbtype_str) | 13<<4, WeatherStationCode: dbI(dbtype_str) | 14<<4, WeatherStationName: dbI(dbtype_str) | 15<<4, MCC: dbI(dbtype_str) | 16<<4, MNC: dbI(dbtype_str) | 17<<4, MobileBrand: dbI(dbtype_str) | 18<<4, Elevation: dbI(dbtype_str) | 19<<4, dbField_columns: 19, dbField_dbs: dbI(IP2Location)<<8 | 22},
+		23: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, ISP: dbI(dbtype_str) | 7<<4, Domain: dbI(dbtype_str) | 8<<4, MCC: dbI(dbtype_str) | 9<<4, MNC: dbI(dbtype_str) | 10<<4, MobileBrand: dbI(dbtype_str) | 11<<4, UsageType: dbI(dbtype_str) | 12<<4, dbField_columns: 12, dbField_dbs: dbI(IP2Location)<<8 | 23},
+		24: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, ISP: dbI(dbtype_str) | 9<<4, Domain: dbI(dbtype_str) | 10<<4, NetSpeed: dbI(dbtype_str) | 11<<4, IDDCode: dbI(dbtype_str) | 12<<4, AreaCode: dbI(dbtype_str) | 13<<4, WeatherStationCode: dbI(dbtype_str) | 14<<4, WeatherStationName: dbI(dbtype_str) | 15<<4, MCC: dbI(dbtype_str) | 16<<4, MNC: dbI(dbtype_str) | 17<<4, MobileBrand: dbI(dbtype_str) | 18<<4, Elevation: dbI(dbtype_str) | 19<<4, UsageType: dbI(dbtype_str) | 20<<4, dbField_columns: 20, dbField_dbs: dbI(IP2Location)<<8 | 24},
+		25: {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, Region: dbI(dbtype_str) | 3<<4, City: dbI(dbtype_str) | 4<<4, Latitude: dbI(dbtype_f32) | 255<<12 | 5<<4, Longitude: dbI(dbtype_f32) | 255<<12 | 6<<4, Zipcode: dbI(dbtype_str) | 7<<4, Timezone: dbI(dbtype_str) | 8<<4, ISP: dbI(dbtype_str) | 9<<4, Domain: dbI(dbtype_str) | 10<<4, NetSpeed: dbI(dbtype_str) | 11<<4, IDDCode: dbI(dbtype_str) | 12<<4, AreaCode: dbI(dbtype_str) | 13<<4, WeatherStationCode: dbI(dbtype_str) | 14<<4, WeatherStationName: dbI(dbtype_str) | 15<<4, MCC: dbI(dbtype_str) | 16<<4, MNC: dbI(dbtype_str) | 17<<4, MobileBrand: dbI(dbtype_str) | 18<<4, Elevation: dbI(dbtype_str) | 19<<4, UsageType: dbI(dbtype_str) | 20<<4, AddressType: dbI(dbtype_str) | 21<<4, Category: dbI(dbtype_str) | 22<<4, dbField_columns: 22, dbField_dbs: dbI(IP2Location)<<8 | 25},
 	},
 	IP2Proxy: {
-		1: {
-			CountryCode:    ^dbfd(0x02000),
-			CountryName:    ^dbfd(0x02030),
-			dbFieldColumns: 2,
-		},
-		2: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			dbFieldColumns: 3,
-		},
-		3: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			Region:         ^dbfd(0x04000),
-			City:           ^dbfd(0x05000),
-			dbFieldColumns: 5,
-		},
-		4: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			Region:         ^dbfd(0x04000),
-			City:           ^dbfd(0x05000),
-			ISP:            ^dbfd(0x06000),
-			dbFieldColumns: 6,
-		},
-		5: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			Region:         ^dbfd(0x04000),
-			City:           ^dbfd(0x05000),
-			ISP:            ^dbfd(0x06000),
-			Domain:         ^dbfd(0x07000),
-			dbFieldColumns: 7,
-		},
-		6: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			Region:         ^dbfd(0x04000),
-			City:           ^dbfd(0x05000),
-			ISP:            ^dbfd(0x06000),
-			Domain:         ^dbfd(0x07000),
-			UsageType:      ^dbfd(0x08000),
-			dbFieldColumns: 8,
-		},
-		7: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			Region:         ^dbfd(0x04000),
-			City:           ^dbfd(0x05000),
-			ISP:            ^dbfd(0x06000),
-			Domain:         ^dbfd(0x07000),
-			UsageType:      ^dbfd(0x08000),
-			ASN:            ^dbfd(0x09000),
-			AS:             ^dbfd(0x0A000),
-			dbFieldColumns: 10,
-		},
-		8: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			Region:         ^dbfd(0x04000),
-			City:           ^dbfd(0x05000),
-			ISP:            ^dbfd(0x06000),
-			Domain:         ^dbfd(0x07000),
-			UsageType:      ^dbfd(0x08000),
-			ASN:            ^dbfd(0x09000),
-			AS:             ^dbfd(0x0A000),
-			LastSeen:       ^dbfd(0x0B000),
-			dbFieldColumns: 11,
-		},
-		9: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			Region:         ^dbfd(0x04000),
-			City:           ^dbfd(0x05000),
-			ISP:            ^dbfd(0x06000),
-			Domain:         ^dbfd(0x07000),
-			UsageType:      ^dbfd(0x08000),
-			ASN:            ^dbfd(0x09000),
-			AS:             ^dbfd(0x0A000),
-			LastSeen:       ^dbfd(0x0B000),
-			Threat:         ^dbfd(0x0C000),
-			dbFieldColumns: 12,
-		},
-		10: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			Region:         ^dbfd(0x04000),
-			City:           ^dbfd(0x05000),
-			ISP:            ^dbfd(0x06000),
-			Domain:         ^dbfd(0x07000),
-			UsageType:      ^dbfd(0x08000),
-			ASN:            ^dbfd(0x09000),
-			AS:             ^dbfd(0x0A000),
-			LastSeen:       ^dbfd(0x0B000),
-			Threat:         ^dbfd(0x0C000),
-			dbFieldColumns: 12,
-		},
-		11: {
-			CountryCode:    ^dbfd(0x03000),
-			CountryName:    ^dbfd(0x03030),
-			ProxyType:      ^dbfd(0x02000),
-			Region:         ^dbfd(0x04000),
-			City:           ^dbfd(0x05000),
-			ISP:            ^dbfd(0x06000),
-			Domain:         ^dbfd(0x07000),
-			UsageType:      ^dbfd(0x08000),
-			ASN:            ^dbfd(0x09000),
-			AS:             ^dbfd(0x0A000),
-			LastSeen:       ^dbfd(0x0B000),
-			Threat:         ^dbfd(0x0C000),
-			Provider:       ^dbfd(0x0D000),
-			dbFieldColumns: 13,
-		},
+		1:  {CountryCode: dbI(dbtype_str) | 2<<4, CountryName: dbI(dbtype_str) | 3<<12 | 2<<4, dbField_columns: 2, dbField_dbs: dbI(IP2Proxy)<<8 | 1},
+		2:  {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, dbField_columns: 3, dbField_dbs: dbI(IP2Proxy)<<8 | 2},
+		3:  {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, Region: dbI(dbtype_str) | 4<<4, City: dbI(dbtype_str) | 5<<4, dbField_columns: 5, dbField_dbs: dbI(IP2Proxy)<<8 | 3},
+		4:  {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, Region: dbI(dbtype_str) | 4<<4, City: dbI(dbtype_str) | 5<<4, ISP: dbI(dbtype_str) | 6<<4, dbField_columns: 6, dbField_dbs: dbI(IP2Proxy)<<8 | 4},
+		5:  {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, Region: dbI(dbtype_str) | 4<<4, City: dbI(dbtype_str) | 5<<4, ISP: dbI(dbtype_str) | 6<<4, Domain: dbI(dbtype_str) | 7<<4, dbField_columns: 7, dbField_dbs: dbI(IP2Proxy)<<8 | 5},
+		6:  {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, Region: dbI(dbtype_str) | 4<<4, City: dbI(dbtype_str) | 5<<4, ISP: dbI(dbtype_str) | 6<<4, Domain: dbI(dbtype_str) | 7<<4, UsageType: dbI(dbtype_str) | 8<<4, dbField_columns: 8, dbField_dbs: dbI(IP2Proxy)<<8 | 6},
+		7:  {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, Region: dbI(dbtype_str) | 4<<4, City: dbI(dbtype_str) | 5<<4, ISP: dbI(dbtype_str) | 6<<4, Domain: dbI(dbtype_str) | 7<<4, UsageType: dbI(dbtype_str) | 8<<4, ASN: dbI(dbtype_str) | 9<<4, AS: dbI(dbtype_str) | 10<<4, dbField_columns: 10, dbField_dbs: dbI(IP2Proxy)<<8 | 7},
+		8:  {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, Region: dbI(dbtype_str) | 4<<4, City: dbI(dbtype_str) | 5<<4, ISP: dbI(dbtype_str) | 6<<4, Domain: dbI(dbtype_str) | 7<<4, UsageType: dbI(dbtype_str) | 8<<4, ASN: dbI(dbtype_str) | 9<<4, AS: dbI(dbtype_str) | 10<<4, LastSeen: dbI(dbtype_str) | 11<<4, dbField_columns: 11, dbField_dbs: dbI(IP2Proxy)<<8 | 8},
+		9:  {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, Region: dbI(dbtype_str) | 4<<4, City: dbI(dbtype_str) | 5<<4, ISP: dbI(dbtype_str) | 6<<4, Domain: dbI(dbtype_str) | 7<<4, UsageType: dbI(dbtype_str) | 8<<4, ASN: dbI(dbtype_str) | 9<<4, AS: dbI(dbtype_str) | 10<<4, LastSeen: dbI(dbtype_str) | 11<<4, Threat: dbI(dbtype_str) | 12<<4, dbField_columns: 12, dbField_dbs: dbI(IP2Proxy)<<8 | 9},
+		10: {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, Region: dbI(dbtype_str) | 4<<4, City: dbI(dbtype_str) | 5<<4, ISP: dbI(dbtype_str) | 6<<4, Domain: dbI(dbtype_str) | 7<<4, UsageType: dbI(dbtype_str) | 8<<4, ASN: dbI(dbtype_str) | 9<<4, AS: dbI(dbtype_str) | 10<<4, LastSeen: dbI(dbtype_str) | 11<<4, Threat: dbI(dbtype_str) | 12<<4, dbField_columns: 12, dbField_dbs: dbI(IP2Proxy)<<8 | 10},
+		11: {CountryCode: dbI(dbtype_str) | 3<<4, CountryName: dbI(dbtype_str) | 3<<12 | 3<<4, ProxyType: dbI(dbtype_str) | 2<<4, Region: dbI(dbtype_str) | 4<<4, City: dbI(dbtype_str) | 5<<4, ISP: dbI(dbtype_str) | 6<<4, Domain: dbI(dbtype_str) | 7<<4, UsageType: dbI(dbtype_str) | 8<<4, ASN: dbI(dbtype_str) | 9<<4, AS: dbI(dbtype_str) | 10<<4, LastSeen: dbI(dbtype_str) | 11<<4, Threat: dbI(dbtype_str) | 12<<4, Provider: dbI(dbtype_str) | 13<<4, dbField_columns: 13, dbField_dbs: dbI(IP2Proxy)<<8 | 11},
 	},
 }
+
+const (
+	dbProductMax    = DBProduct(2)
+	dbTypeMax       = DBType(25)
+	dbFieldMax      = DBField(28)
+	dbField_columns = dbFieldMax + 1
+	dbField_dbs     = dbFieldMax + 2
+)
+
+type dbI uint32
+type dbS [dbFieldMax + 3]dbI
+type dbs [dbProductMax + 1][dbTypeMax + 1]dbS
+
+func dbinfo(p DBProduct, t DBType) *dbS {
+	if p > dbProductMax || t > dbTypeMax {
+		return nil
+	}
+	return &_dbs[p][t]
+}
+
+func (i dbS) Field(f DBField) dbI {
+	if f > dbFieldMax {
+		return 0
+	}
+	return i[f]
+}
+
+func (i dbS) Columns() uint8 {
+	return uint8(i[dbField_columns])
+}
+
+func (i dbS) Info() (DBProduct, DBType) {
+	x := i[dbField_dbs]
+	return DBProduct(uint8(x >> 8)), DBType(uint8(x))
+}
+
+func (i dbS) AppendInfo(b []byte) []byte {
+	p, t := i.Info()
+	return strconv.AppendInt(append(append(append(b, p.product()...), ' '), p.prefix()...), int64(t), 10)
+}
+
+func (i dbS) AppendType(b []byte) []byte {
+	p, t := i.Info()
+	return strconv.AppendInt(append(b, p.prefix()...), int64(t), 10)
+}
+
+func (c dbI) IsValid() bool    { return c != 0 }
+func (c dbI) Column() uint8    { return uint8(c >> 4) }
+func (c dbI) IsPointer() bool  { return c&0xFF0 == 0 }
+func (c dbI) PtrOffset() uint8 { return uint8(c >> 12) }
+func (c dbI) Type() uint8      { return uint8(c & 0xF) }
 
 func (p DBProduct) GoString() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {

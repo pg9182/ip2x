@@ -29,7 +29,7 @@ func (p DBProduct) FormatType(t DBType) string {
 
 // SupportsType returns true if p supports variant t.
 func (p DBProduct) SupportsType(t DBType) bool {
-	return getdbcols(p, t) != 0
+	return dbinfo(p, t) != nil
 }
 
 // DBType represents an IP2Location database variant. Each database type
@@ -52,6 +52,7 @@ func (f DBField) String() string {
 // DB reads an IP2Location binary database.
 type DB struct {
 	r io.ReaderAt
+	s *dbS
 
 	// header
 	dbtype   DBType
@@ -69,6 +70,11 @@ type DB struct {
 	prtype   uint8
 	filesize uint32
 }
+
+const (
+	dbtype_str = 0
+	dbtype_f32 = 1
+)
 
 // New opens an IP2Location binary database reading from r.
 func New(r io.ReaderAt) (*DB, error) {
@@ -96,11 +102,11 @@ func New(r io.ReaderAt) (*DB, error) {
 		// only has prcode field in >= 2021
 		return nil, errors.New("database is too old (date: " + db.Version() + ")")
 	}
-	if !db.prcode.SupportsType(db.dbtype) {
-		return nil, errors.New("unsupported database " + db.prcode.FormatProduct(db.dbtype))
+	if db.s = dbinfo(db.prcode, db.dbtype); db.s == nil {
+		return nil, errors.New("unsupported database " + strconv.Itoa(int(db.prcode)))
 	}
-	if ecol := getdbcols(db.prcode, db.dbtype); db.dbcolumn != ecol {
-		return nil, errors.New("database is corrupt or library is buggy: db " + db.prcode.FormatProduct(db.dbtype) + ": expected " + strconv.Itoa(int(ecol)) + "  cols, got " + strconv.Itoa(int(db.dbcolumn)))
+	if db.dbcolumn != db.s.Columns() {
+		return nil, errors.New("database is corrupt or library is buggy: db " + as_strref_unsafe(db.s.AppendInfo(nil)) + ": expected " + strconv.Itoa(int(db.s.Columns())) + "  cols, got " + strconv.Itoa(int(db.dbcolumn)))
 	}
 	return &db, nil
 }
@@ -108,7 +114,7 @@ func New(r io.ReaderAt) (*DB, error) {
 // String returns a human-readable string describing the database.
 func (db *DB) String() string {
 	s := make([]byte, 256)
-	s = append(s, db.prcode.FormatProduct(db.dbtype)...)
+	s = db.s.AppendInfo(s)
 	s = append(s, ' ')
 	s = append(s, db.Version()...)
 	s = append(s, ' ', '[')
@@ -135,7 +141,7 @@ func (db *DB) String() string {
 
 // Info returns the database product and type.
 func (db *DB) Info() (DBProduct, DBType) {
-	return db.prcode, db.dbtype
+	return db.s.Info()
 }
 
 // Version returns the database version.
@@ -156,7 +162,7 @@ func (db *DB) Version() string {
 
 // Has returns true if the database contains f.
 func (db *DB) Has(f DBField) bool {
-	return getdbfd(db.prcode, db.dbtype, f).IsValid()
+	return db.s.Field(f).IsValid()
 }
 
 // HasIPv4 returns true if the database contains IPv4 entries.
@@ -270,8 +276,7 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 
 		// found
 		r.r = db.r
-		r.p = db.prcode
-		r.t = db.dbtype
+		r.s = db.s
 		r.d = row[iplen:colsize]
 		break
 	}
@@ -306,14 +311,13 @@ var (
 // Record points to a database row.
 type Record struct {
 	r io.ReaderAt
-	p DBProduct
-	t DBType
+	s *dbS
 	d []byte
 }
 
 // IsValid checks whether the record is pointing to a database row.
 func (r Record) IsValid() bool {
-	return r.d != nil
+	return r.s != nil
 }
 
 // String gets and formats all fields in the record as a human-readable string.
@@ -332,12 +336,13 @@ func (r Record) FormatString(color, multiline bool) string {
 	if color {
 		s = append(s, "\x1b[34m"...)
 	}
-	s = append(s, r.p.String()...)
+	p, _ := r.s.Info()
+	s = append(s, p.product()...)
 	if color {
 		s = append(s, "\x1b[0m"...)
 	}
 	s = append(s, '<')
-	s = append(s, r.p.FormatType(r.t)...)
+	s = r.s.AppendType(s)
 	s = append(s, '>')
 	if color {
 		s = append(s, "\x1b[0m"...)
@@ -370,12 +375,12 @@ func (r Record) FormatString(color, multiline bool) string {
 			}
 			if dt != nil {
 				switch fd.Type() {
-				case dbft_string:
+				case dbtype_str:
 					if color {
 						s = append(s, "\x1b[33m"...)
 					}
 					s = strconv.AppendQuote(s, as_strref_unsafe(dt))
-				case dbft_f32le:
+				case dbtype_f32:
 					if color {
 						s = append(s, "\x1b[32m"...)
 					}
@@ -421,9 +426,9 @@ func (r Record) MarshalJSON() ([]byte, error) {
 			b = append(b, f.String()...)
 			b = append(b, '"', ':')
 			switch fd.Type() {
-			case dbft_string:
+			case dbtype_str:
 				b = strconv.AppendQuote(b, as_strref_unsafe(dt))
-			case dbft_f32le:
+			case dbtype_f32:
 				b = strconv.AppendFloat(b, float64(as_f32(as_le_u32(dt))), 'f', -1, 32)
 			}
 		} else if err != nil {
@@ -440,9 +445,9 @@ func (r Record) MarshalJSON() ([]byte, error) {
 func (r Record) Get(f DBField) any {
 	if dt, fd, _ := r.get(f); dt != nil {
 		switch fd.Type() {
-		case dbft_string:
+		case dbtype_str:
 			return as_strref_unsafe(dt)
-		case dbft_f32le:
+		case dbtype_f32:
 			return as_f32(as_le_u32(dt))
 		}
 	}
@@ -453,9 +458,9 @@ func (r Record) Get(f DBField) any {
 func (r Record) GetString(f DBField) (string, bool) {
 	if dt, fd, _ := r.get(f); dt != nil {
 		switch fd.Type() {
-		case dbft_string:
+		case dbtype_str:
 			return as_strref_unsafe(dt), true
-		case dbft_f32le:
+		case dbtype_f32:
 			return strconv.FormatFloat(float64(as_f32(as_le_u32(dt))), 'f', -1, 32), true
 		}
 	}
@@ -466,11 +471,11 @@ func (r Record) GetString(f DBField) (string, bool) {
 func (r Record) GetFloat32(f DBField) (float32, bool) {
 	if dt, fd, _ := r.get(f); dt != nil {
 		switch fd.Type() {
-		case dbft_string:
+		case dbtype_str:
 			if v, err := strconv.ParseFloat(as_strref_unsafe(dt), 32); err == nil {
 				return float32(v), true
 			}
-		case dbft_f32le:
+		case dbtype_f32:
 			return as_f32(as_le_u32(dt)), true
 		}
 	}
@@ -484,22 +489,21 @@ func (r Record) GetFloat32(f DBField) (float32, bool) {
 //   - If the read data is too short for the type (most likely due to an
 //     unexpected EOF), dt will be nil, fd will be valid, and err will be set.
 //   - Otherwise, dt will be set, fd will be valid, and err will be nil.
-func (r Record) get(f DBField) (dt []byte, fd dbfd, err error) {
+func (r Record) get(f DBField) (dt []byte, fd dbI, err error) {
 	if !r.IsValid() {
 		return
 	}
 
-	// get field descriptor
-	if fd = getdbfd(r.p, r.t, f); !fd.IsValid() {
-		return // no such field
+	if fd = r.s.Field(f); fd == 0 {
+		return
 	}
 
 	// get maxfield size
 	var sz int
 	switch fd.Type() {
-	case dbft_string:
+	case dbtype_str:
 		sz = 1 + 0xFF // length byte + max length
-	case dbft_f32le:
+	case dbtype_f32:
 		sz = 32 / 4
 	default:
 		panic("unhandled dbft")
@@ -529,11 +533,11 @@ func (r Record) get(f DBField) (dt []byte, fd dbfd, err error) {
 	// parse field data
 	if len(data) != 0 {
 		switch fd.Type() {
-		case dbft_string:
+		case dbtype_str:
 			if len(data) > int(data[0]) {
 				dt = data[1 : 1+data[0]]
 			}
-		case dbft_f32le:
+		case dbtype_f32:
 			if len(data) >= int(sz) {
 				dt = data
 			}
