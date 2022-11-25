@@ -90,8 +90,8 @@ func New(r io.ReaderAt) (*DB, error) {
 	if db.s = dbinfo(db.prcode, db.dbtype); db.s == nil {
 		return nil, errors.New("unsupported database " + strconv.Itoa(int(db.prcode)))
 	}
-	if db.dbcolumn != db.s.Columns() {
-		return nil, errors.New("database is corrupt or library is buggy: db " + as_strref_unsafe(db.s.AppendInfo(nil)) + ": expected " + strconv.Itoa(int(db.s.Columns())) + "  cols, got " + strconv.Itoa(int(db.dbcolumn)))
+	if c, _, _ := db.s.Info(); db.dbcolumn != c {
+		return nil, errors.New("database is corrupt or library is buggy: db " + db.prcode.product() + " " + db.prcode.prefix() + db.dbtype.String() + ": expected " + strconv.Itoa(int(c)) + "  cols, got " + strconv.Itoa(int(db.dbcolumn)))
 	}
 	return &db, nil
 }
@@ -99,7 +99,10 @@ func New(r io.ReaderAt) (*DB, error) {
 // String returns a human-readable string describing the database.
 func (db *DB) String() string {
 	s := make([]byte, 256)
-	s = db.s.AppendInfo(s)
+	s = append(s, db.prcode.product()...)
+	s = append(s, ' ')
+	s = append(s, db.prcode.prefix()...)
+	s = strconv.AppendInt(s, int64(db.dbtype), 10)
 	s = append(s, ' ')
 	s = append(s, db.Version()...)
 	s = append(s, ' ', '[')
@@ -125,8 +128,9 @@ func (db *DB) String() string {
 }
 
 // Info returns the database product and type.
-func (db *DB) Info() (DBProduct, DBType) {
-	return db.s.Info()
+func (db *DB) Info() (p DBProduct, t DBType) {
+	_, p, t = db.s.Info()
+	return
 }
 
 // Version returns the database version.
@@ -321,13 +325,14 @@ func (r Record) FormatString(color, multiline bool) string {
 	if color {
 		s = append(s, "\x1b[34m"...)
 	}
-	p, _ := r.s.Info()
+	_, p, t := r.s.Info()
 	s = append(s, p.product()...)
 	if color {
 		s = append(s, "\x1b[0m"...)
 	}
 	s = append(s, '<')
-	s = r.s.AppendType(s)
+	s = append(s, p.prefix()...)
+	s = strconv.AppendInt(s, int64(t), 10)
 	s = append(s, '>')
 	if color {
 		s = append(s, "\x1b[0m"...)
@@ -479,7 +484,7 @@ func (r Record) get(f DBField) (dt []byte, fd dbI, err error) {
 		return
 	}
 
-	if fd = r.s.Field(f); fd == 0 {
+	if fd = r.s.Field(f); !fd.IsValid() {
 		return
 	}
 

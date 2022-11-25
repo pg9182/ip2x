@@ -518,16 +518,11 @@ func (spec *spec) Generate(src, dst string) error {
 			var n int
 			for _, col := range prod.ProductColumn {
 				if col.DatabaseColumn[t] != 0 {
-					if col.Pointer != 0 {
-						fmt.Fprintf(&buf, "%s: dbI(dbtype_%s)|%d<<12|%d<<4, ", col.Field.GoName, col.Type, col.Pointer, col.DatabaseColumn[t])
-					} else {
-						fmt.Fprintf(&buf, "%s: dbI(dbtype_%s)|%d<<4, ", col.Field.GoName, col.Type, col.DatabaseColumn[t])
-					}
+					fmt.Fprintf(&buf, "%s: {%d, %d, dbtype_%s}, ", col.Field.GoName, col.DatabaseColumn[t], col.Pointer, col.Type)
 					n++
 				}
 			}
-			fmt.Fprintf(&buf, "dbField_columns: %d, ", n)
-			fmt.Fprintf(&buf, "dbField_dbs: dbI(%s)<<8|%d},\n", prod.GoName, t)
+			fmt.Fprintf(&buf, "dbField_extra: {%d, uint8(%s), %d}},\n", n, prod.GoName, t)
 		}
 		fmt.Fprintf(&buf, "\t},\n")
 	}
@@ -547,53 +542,42 @@ func (spec *spec) Generate(src, dst string) error {
 	fmt.Fprintf(&buf, "\tdbProductMax = DBProduct(%d)\n", dbProductMax)
 	fmt.Fprintf(&buf, "\tdbTypeMax = DBType(%d)\n", dbTypeMax)
 	fmt.Fprintf(&buf, "\tdbFieldMax = DBField(%d)\n", len(spec.field))
-	fmt.Fprintf(&buf, "\tdbField_columns = dbFieldMax+1\n")
-	fmt.Fprintf(&buf, "\tdbField_dbs = dbFieldMax+2\n")
+	fmt.Fprintf(&buf, "\tdbField_extra = dbFieldMax+1\n")
 	fmt.Fprintf(&buf, ")\n")
 
 	buf.WriteString(strings.ReplaceAll(`
-	type dbI uint32
-	type dbS [dbFieldMax + 3]dbI
+	type dbI struct {
+		col uint8
+		ptr uint8
+		typ uint8
+	}
+	type dbS [dbFieldMax + 2]dbI
 	type dbs [dbProductMax + 1][dbTypeMax + 1]dbS
 
-	func dbinfo(p DBProduct, t DBType) *dbS {
-		if p > dbProductMax || t > dbTypeMax {
-			return nil
+	func dbinfo(p DBProduct, t DBType) (r *dbS) {
+		if p <= dbProductMax && t <= dbTypeMax {
+			r = &_dbs[p][t]
 		}
-		return &_dbs[p][t]
+		return
 	}
 
-	func (i dbS) Field(f DBField) dbI {
-		if f > dbFieldMax {
-			return 0
+	func (i dbS) Field(f DBField) (r dbI) {
+		if f <= dbFieldMax {
+			r = i[f]
 		}
-		return i[f]
+		return
 	}
 
-	func (i dbS) Columns() uint8 {
-		return uint8(i[dbField_columns])
+	func (i dbS) Info() (uint8, DBProduct, DBType) {
+		x := i[dbField_extra]
+		return x.col, DBProduct(x.ptr), DBType(x.typ)
 	}
 
-	func (i dbS) Info() (DBProduct, DBType) {
-		x := i[dbField_dbs]
-		return DBProduct(uint8(x>>8)), DBType(uint8(x))
-	}
-
-	func (i dbS) AppendInfo(b []byte) []byte {
-		p, t := i.Info()
-		return strconv.AppendInt(append(append(append(b, p.product()...), ' '), p.prefix()...), int64(t), 10)
-	}
-	
-	func (i dbS) AppendType(b []byte) []byte {
-		p, t := i.Info()
-		return strconv.AppendInt(append(b, p.prefix()...), int64(t), 10)
-	}
-
-	func (c dbI) IsValid() bool    { return c != 0 }
-	func (c dbI) Column() uint8    { return uint8(c >> 4) }
-	func (c dbI) IsPointer() bool  { return c&0xFF0 == 0 }
-	func (c dbI) PtrOffset() uint8 { return uint8(c >> 12) }
-	func (c dbI) Type() uint8      { return uint8(c & 0xF) }
+	func (c dbI) IsValid() bool    { return c.col != 0 }
+	func (c dbI) Column() uint8    { return c.col }
+	func (c dbI) IsPointer() bool  { return ^c.ptr == 0 }
+	func (c dbI) PtrOffset() uint8 { return c.ptr }
+	func (c dbI) Type() uint8      { return c.typ }
 	`, "\n\t", "\n"))
 
 	var ss stringerSet
