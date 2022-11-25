@@ -50,6 +50,22 @@ func BenchmarkIP2x_GetOneFloat(b *testing.B) {
 	}
 }
 
+func BenchmarkIP2x_GetTwoString(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
+		r.GetString(ip2x.CountryCode)
+		r.GetString(ip2x.Region)
+	}
+}
+
+func BenchmarkIP2x_GetTwoFloat(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
+		r.GetFloat32(ip2x.Latitude)
+		r.GetFloat32(ip2x.Longitude)
+	}
+}
+
 func BenchmarkIP2x_GetNonexistent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
@@ -84,6 +100,20 @@ func BenchmarkIP2LocationV9_GetOneString(b *testing.B) {
 func BenchmarkIP2LocationV9_GetOneFloat(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		IP2LocationV9_DB.Get_latitude(ipstrs[i%len(ips)])
+	}
+}
+
+func BenchmarkIP2LocationV9_GetTwoString(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		IP2LocationV9_DB.Get_country_short(ipstrs[i%len(ips)])
+		IP2LocationV9_DB.Get_country_long(ipstrs[i%len(ips)])
+	}
+}
+
+func BenchmarkIP2LocationV9_GetTwoFloat(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		IP2LocationV9_DB.Get_latitude(ipstrs[i%len(ips)])
+		IP2LocationV9_DB.Get_longitude(ipstrs[i%len(ips)])
 	}
 }
 
