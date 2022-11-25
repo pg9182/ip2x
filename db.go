@@ -17,21 +17,6 @@ func (p DBProduct) String() string {
 	return p.product()
 }
 
-// FormatProduct returns the full product name of t.
-func (p DBProduct) FormatProduct(t DBType) string {
-	return p.product() + " " + p.FormatType(t)
-}
-
-// FormatType prepends the product prefix to t.
-func (p DBProduct) FormatType(t DBType) string {
-	return p.prefix() + t.String()
-}
-
-// SupportsType returns true if p supports variant t.
-func (p DBProduct) SupportsType(t DBType) bool {
-	return dbinfo(p, t) != nil
-}
-
 // DBType represents an IP2Location database variant. Each database type
 // contains different sets of columns.
 type DBType uint8
