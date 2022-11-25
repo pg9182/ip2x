@@ -33,22 +33,22 @@ goos: linux
 goarch: amd64
 pkg: github.com/pg9182/ip2x/test
 cpu: AMD Ryzen 5 5600G with Radeon Graphics         
-BenchmarkIP2x_Init-12                       	14321792	        71.51 ns/op	     128 B/op	       2 allocs/op
-BenchmarkIP2x_LookupOnly-12                 	17008699	        63.71 ns/op	      48 B/op	       1 allocs/op
-BenchmarkIP2x_GetAll-12                     	 1538194	       772.8 ns/op	    1688 B/op	      14 allocs/op
-BenchmarkIP2x_GetOneString-12               	 8226570	       156.5 ns/op	     304 B/op	       2 allocs/op
-BenchmarkIP2x_GetOneFloat-12                	14182785	        81.54 ns/op	      48 B/op	       1 allocs/op
-BenchmarkIP2x_GetTwoString-12               	 5154520	       214.2 ns/op	     560 B/op	       3 allocs/op
-BenchmarkIP2x_GetTwoFloat-12                	11513187	       102.4 ns/op	      48 B/op	       1 allocs/op
-BenchmarkIP2x_GetNonexistent-12             	14228542	        85.68 ns/op	      48 B/op	       1 allocs/op
-BenchmarkIP2LocationV9_Init-12              	  940201	      1276 ns/op	     400 B/op	       7 allocs/op
-BenchmarkIP2LocationV9_LookupOnly-12        	 1478160	       740.9 ns/op	     672 B/op	      24 allocs/op
-BenchmarkIP2LocationV9_GetAll-12            	  819165	      1372 ns/op	    2268 B/op	      36 allocs/op
-BenchmarkIP2LocationV9_GetOneString-12      	 1301914	       841.1 ns/op	     936 B/op	      26 allocs/op
-BenchmarkIP2LocationV9_GetOneFloat-12       	 1441605	       811.4 ns/op	     672 B/op	      24 allocs/op
-BenchmarkIP2LocationV9_GetTwoString-12      	  700336	      1690 ns/op	    1883 B/op	      53 allocs/op
-BenchmarkIP2LocationV9_GetTwoFloat-12       	  749336	      1605 ns/op	    1345 B/op	      49 allocs/op
-BenchmarkIP2LocationV9_GetNonexistent-12    	 1421689	       813.9 ns/op	     672 B/op	      24 allocs/op
+BenchmarkIP2x_Init-12                       	17850333	        67.91 ns/op	     128 B/op	       2 allocs/op
+BenchmarkIP2x_LookupOnly-12                 	18722506	        61.36 ns/op	      48 B/op	       1 allocs/op
+BenchmarkIP2x_GetAll-12                     	 1522696	       812.2 ns/op	    1688 B/op	      14 allocs/op
+BenchmarkIP2x_GetOneString-12               	 7839385	       144.1 ns/op	     304 B/op	       2 allocs/op
+BenchmarkIP2x_GetOneFloat-12                	14312419	        84.16 ns/op	      48 B/op	       1 allocs/op
+BenchmarkIP2x_GetTwoString-12               	 4243560	       244.9 ns/op	     560 B/op	       3 allocs/op
+BenchmarkIP2x_GetTwoFloat-12                	12198259	       101.1 ns/op	      48 B/op	       1 allocs/op
+BenchmarkIP2x_GetNonexistent-12             	14834245	        79.85 ns/op	      48 B/op	       1 allocs/op
+BenchmarkIP2LocationV9_Init-12              	  602967	      2191 ns/op	     400 B/op	       7 allocs/op
+BenchmarkIP2LocationV9_LookupOnly-12        	 1473849	       782.6 ns/op	     672 B/op	      24 allocs/op
+BenchmarkIP2LocationV9_GetAll-12            	  819900	      1324 ns/op	    2268 B/op	      36 allocs/op
+BenchmarkIP2LocationV9_GetOneString-12      	 1346534	       889.2 ns/op	     936 B/op	      26 allocs/op
+BenchmarkIP2LocationV9_GetOneFloat-12       	 1441219	       795.0 ns/op	     672 B/op	      24 allocs/op
+BenchmarkIP2LocationV9_GetTwoString-12      	  546868	      1866 ns/op	    1883 B/op	      53 allocs/op
+BenchmarkIP2LocationV9_GetTwoFloat-12       	  693019	      1561 ns/op	    1345 B/op	      49 allocs/op
+BenchmarkIP2LocationV9_GetNonexistent-12    	 1399872	       795.5 ns/op	     672 B/op	      24 allocs/op
 ```
 
 ## CLI
