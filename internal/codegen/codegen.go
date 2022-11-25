@@ -561,16 +561,19 @@ func (spec *spec) Generate(src, dst string) error {
 		return
 	}
 
-	func (i dbS) Field(f DBField) (r dbI) {
-		if f <= dbFieldMax {
+	func (i *dbS) Field(f DBField) (r dbI) {
+		if i != nil && f <= dbFieldMax {
 			r = i[f]
 		}
 		return
 	}
 
-	func (i dbS) Info() (uint8, DBProduct, DBType) {
-		x := i[dbField_extra]
-		return x.col, DBProduct(x.ptr), DBType(x.typ)
+	func (i *dbS) Info() (c uint8, p DBProduct, t DBType) {
+		if i != nil {
+			x := i[dbField_extra]
+			c, p, t = x.col, DBProduct(x.ptr), DBType(x.typ)
+		}
+		return
 	}
 
 	func (c dbI) IsValid() bool    { return c.col != 0 }

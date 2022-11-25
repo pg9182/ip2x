@@ -57,8 +57,8 @@ type DB struct {
 }
 
 const (
-	dbtype_str = 0
-	dbtype_f32 = 1
+	dbtype_str = iota
+	dbtype_f32
 )
 
 // New opens an IP2Location binary database reading from r.
@@ -166,9 +166,10 @@ func (db *DB) HasIPv6() bool {
 
 // EachField calls fn for each column in the database until fn returns false.
 func (db *DB) EachField(fn func(DBField) bool) {
-	if fn != nil {
+	if fn != nil && db.s != nil {
+		i := *db.s
 		for f := DBField(1); f <= dbFieldMax; f++ {
-			if db.Has(f) {
+			if i.Field(f).IsValid() {
 				if !fn(f) {
 					return
 				}
@@ -197,11 +198,21 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 	ip, iplen := unmap(as_ip6_uint128(a))
 
 	// 4 bytes per column except for the first one (IPFrom)
-	colsize := uint32(iplen) + uint32(db.dbcolumn-1)*4
+	var (
+		colsize = uint(iplen) + uint(db.dbcolumn-1)*4
+		rowend  = colsize + uint(iplen)
+	)
 
 	// row buffer (columns + next IPFrom)
-	row := make([]byte, colsize+uint32(iplen))
-	_ = row[0:8] // bounds check hint (will always be at least IPFrom+IPTo)
+	row := make([]byte, rowend)
+
+	// note: this also serves as a bounds check hint for the compiler so it
+	// doesn't generate bounds checks in the loop
+	var (
+		row_data   = row[iplen:colsize]
+		row_ipfrom = row[:iplen]
+		row_ipto   = row[colsize:rowend]
+	)
 
 	// set the initial binary search range
 	var off, lower, upper uint32
@@ -232,7 +243,7 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 		mid := (lower + upper) / 2
 
 		// calculate the current row offset
-		if off = mid * colsize; iplen == 4 {
+		if off = mid * uint32(colsize); iplen == 4 {
 			off += db.ip4base - 1
 		} else {
 			off += db.ip6base - 1
@@ -246,11 +257,11 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 		// get the row start/end range
 		var ipfrom, ipto uint128
 		if iplen == 4 {
-			ipfrom = as_u32_u128(as_le_u32(row[:4]))
-			ipto = as_u32_u128(as_le_u32(row[colsize:]))
+			ipfrom = as_u32_u128(as_le_u32(row_ipfrom))
+			ipto = as_u32_u128(as_le_u32(row_ipto))
 		} else {
-			ipfrom = as_be_u128(row)
-			ipto = as_be_u128(row[colsize:])
+			ipfrom = as_be_u128(row_ipfrom)
+			ipto = as_be_u128(row_ipto)
 		}
 
 		// binary search cases
@@ -258,7 +269,7 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 			upper = mid - 1
 			continue
 		}
-		if ipto == ip || ipto.Less(ip) {
+		if !ip.Less(ipto) {
 			lower = mid + 1
 			continue
 		}
@@ -266,7 +277,7 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 		// found
 		r.r = db.r
 		r.s = db.s
-		r.d = row[iplen:colsize]
+		r.d = row_data
 		break
 	}
 	return
@@ -588,7 +599,7 @@ func as_u32_u128(u32 uint32) uint128 {
 
 // as_be_u128 reads a big-endian uint128 from b.
 func as_be_u128(b []byte) uint128 {
-	_ = b[0:15] // bounds check hint to compiler; see golang.org/issue/14808
+	_ = b[15] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint128{
 		hi: as_le_u64(b[8:16]),
 		lo: as_le_u64(b[0:8]),
