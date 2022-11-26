@@ -1,0 +1,43 @@
+name: verify
+
+on: push
+
+jobs:
+  verify:
+    name: ${{matrix.db}}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        db:
+        - IP2LOCATION-LITE-DB11.IPV6.BIN
+        - IP2LOCATION-LITE-DB3.IPV6.BIN
+        - IP2PROXY-LITE-PX11.BIN
+      fail-fast: false
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        path: ip2x
+
+    - name: Checkout testdata
+      uses: actions/checkout@v3
+      with:
+        repository: pg9182/ip2x-testdata
+        ref: 2746e8734378120d18dcb346419de9d9f0445943
+        token: ${{secrets.IP2X_TESTDATA_TOKEN}}
+        path: testdata
+
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.19.x'
+
+    - name: Setup testdata
+      run: zstd --output-dir-flat=. -d ../../testdata/${{matrix.db}}.zst
+      working-directory: ip2x/test
+
+    - name: Verify ${{matrix.db}}
+      run: go run ./verifier ${{matrix.db}}
+      working-directory: ip2x/test
