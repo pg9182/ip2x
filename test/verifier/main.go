@@ -49,9 +49,10 @@ func main() {
 
 	var tot int
 	fmt.Printf("verifying against %s\nstarting......\n", reflect.TypeOf(db2.DB()).Elem().PkgPath())
-	pStart, pLast, pInt, pForce := time.Now(), time.Now(), time.Millisecond*100, false
+	pStart, pLast, pInt, pForce, pClear := time.Now(), time.Now(), time.Millisecond*100, false, "\x1b[A\x1b[K\r"
 	if os.Getenv("CI") != "" {
 		pInt = time.Second * 5
+		pClear = ""
 	}
 	if err := dbRows(r, func(i, total int, ipfrom, ipto netip.Addr) (err error) {
 		defer func() {
@@ -62,7 +63,7 @@ func main() {
 				pct := float64(i+1) / float64(total) * 100
 				nps := float64(i+1) / time.Since(pStart).Seconds()
 				rem := time.Duration(float64(total-i) / nps * float64(time.Second))
-				fmt.Printf("\x1b[A\x1b[K\r[%3.0f%%] %.0f/sec, %s remaining [%s, %s)\n", pct, nps, rem.Truncate(time.Second), ipfrom.StringExpanded(), ipto.StringExpanded())
+				fmt.Printf(pClear+"[%3.0f%%] %.0f rows/sec, %s remaining   [%s, %s)\n", pct, nps, rem.Truncate(time.Second), ipfrom.StringExpanded(), ipto.StringExpanded())
 				pLast = time.Now()
 				pForce = false
 			}
@@ -104,7 +105,7 @@ func main() {
 
 		if err := dbRecordEquals(rend1, rend2); err != nil {
 			if !rend1.IsValid() && dbRecordEmpty(rend2) {
-				fmt.Fprintf(os.Stderr, "\x1b[A\x1b[K\rnote: range [%s, %s): address %s: no record returned by ip2x, but the record from the official library was empty too, so it's probably okay\n\n", ipfrom, ipto, ipend)
+				fmt.Fprintf(os.Stderr, pClear+"note: range [%s, %s): address %s: no record returned by ip2x, but the record from the official library was empty too, so it's probably okay\n\n", ipfrom, ipto, ipend)
 				pForce = true
 				return nil
 			}
