@@ -1,6 +1,6 @@
 # ip2x
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/pg9182/ip2x.svg)](https://pkg.go.dev/github.com/pg9182/ip2x) [![test](https://github.com/pg9182/ip2x/actions/workflows/test.yml/badge.svg)](https://github.com/pg9182/ip2x/actions/workflows/test.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/pg9182/ip2x.svg)](https://pkg.go.dev/github.com/pg9182/ip2x) [![test](https://github.com/pg9182/ip2x/actions/workflows/test.yml/badge.svg)](https://github.com/pg9182/ip2x/actions/workflows/test.yml) [![verify](https://github.com/pg9182/ip2x/actions/workflows/verify.yml/badge.svg)](https://github.com/pg9182/ip2x/actions/workflows/verify.yml)
 
 Module ip2x is an idiomatic, efficient, and robust library and command-line tool for querying [IP2Location](https://www.ip2location.com/) databases.
 
@@ -18,6 +18,7 @@ Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2l
 - Uses code generation to simplify adding new products/types/fields/documentation while reducing the likelihood of bugs ([input](./dbdata.go), [docs](https://pkg.go.dev/github.com/pg9182/ip2x/internal/codegen)).
 - Is written in idiomatic Go: correct error handling (rather than stuffing error strings into the record struct), useful zero values (an empty record will work properly), proper type names, etc.
 - Has [tests](./test/correctness_test.go) to ensure the output is consistent with this library, that a range of IPv4 (and their possible IPv6-mappings) address work correctly, and other things. There are also [fuzz](./test/fuzz_test.go) tests to ensure IPs can't crash the library and are IPv4/v6-mapped correctly.
+- Has an automated [tool](./test/verifier/main.go) to compare the output of this library against the offical ones for every row of any database.
 
 ## Benchmark
 
