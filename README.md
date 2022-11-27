@@ -111,7 +111,7 @@ func main() {
 	}
 
 	// pretty-print
-	fmt.Println(r.FormatString(true, true))
+	fmt.Println(r.Format(true, true))
 	fmt.Println()
 
 	// get some fields the easy way

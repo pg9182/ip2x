@@ -82,7 +82,7 @@ func main() {
 		}
 
 		if err := dbRecordEquals(rfrom1, rfrom2); err != nil {
-			return fmt.Errorf("first (%s) record mismatch (%w):\n\n\tip2x     = %s\n\tofficial = %#v\n\t", ipfrom, err, rfrom1.FormatString(true, false), rfrom2)
+			return fmt.Errorf("first (%s) record mismatch (%w):\n\n\tip2x     = %s\n\tofficial = %#v\n\t", ipfrom, err, rfrom1.Format(true, false), rfrom2)
 		}
 
 		ipend := ipto.Prev()
@@ -109,14 +109,14 @@ func main() {
 				pForce = true
 				return nil
 			}
-			return fmt.Errorf("last (%s) record mismatch (%w):\n\n\tip2x     = %s\n\tofficial = %#v\n\t", ipend, err, rend1.FormatString(true, false), rend2)
+			return fmt.Errorf("last (%s) record mismatch (%w):\n\n\tip2x     = %s\n\tofficial = %#v\n\t", ipend, err, rend1.Format(true, false), rend2)
 		}
 
 		if err := dbRecordEquals(rend2, rfrom2); err != nil {
 			return fmt.Errorf("last official not equal to first (%w) (wtf? does verifier have a bug? or is it the official library?):\n\n\tfirst = %s\n\tlast  = %s\n\t", err, rfrom2, rend2)
 		}
 		if err := dbRecordEquals(rend1, rfrom1); err != nil {
-			return fmt.Errorf("last ip2x not equal to first (%w) (does ip2x have a bug? or is it the official library?):\n\n\tfirst = %s\n\tlast  = %s\n\t", err, rfrom1.FormatString(true, false), rend1.FormatString(true, false))
+			return fmt.Errorf("last ip2x not equal to first (%w) (does ip2x have a bug? or is it the official library?):\n\n\tfirst = %s\n\tlast  = %s\n\t", err, rfrom1.Format(true, false), rend1.Format(true, false))
 		}
 		return nil
 	}); err != nil {

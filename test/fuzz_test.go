@@ -25,7 +25,7 @@ func FuzzLookup(f *testing.F) {
 				t.Errorf("lookup %s: %v", a, err)
 				// not fatal since r should still work on error
 			}
-			if res := r.FormatString(false, false); i >= 2 && last != res {
+			if res := r.Format(false, false); i >= 2 && last != res {
 				t.Errorf("lookup %s: expected all v4 mappings to match native v4 (%s): expected %q, got %q", a, as[1], last, res)
 			} else {
 				last = res

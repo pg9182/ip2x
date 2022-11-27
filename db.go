@@ -323,12 +323,12 @@ func (r Record) IsValid() bool {
 // String gets and formats all fields in the record as a human-readable string.
 // Note that this is highly inefficient.
 func (r Record) String() string {
-	return r.FormatString(RecordStringColor, RecordStringMultiline)
+	return r.Format(RecordStringColor, RecordStringMultiline)
 }
 
-// FormatString gets and formats all fields in the record as a human-readable
+// Format gets and formats all fields in the record as a human-readable
 // string. Note that this is highly inefficient.
-func (r Record) FormatString(color, multiline bool) string {
+func (r Record) Format(color, multiline bool) string {
 	if !r.IsValid() {
 		return ""
 	}
