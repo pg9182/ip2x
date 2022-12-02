@@ -54,10 +54,12 @@ func main() {
 		pInt = time.Second * 5
 		pClear = ""
 	}
-	if err := dbRows(r, func(i, total int, ipfrom, ipto netip.Addr) (err error) {
+	var rerr error
+	if err := db1.EachRecord(func(i, total int, ipfrom, ipto netip.Addr, rr ip2x.Record) bool {
+		var err error
 		defer func() {
 			if err != nil {
-				err = fmt.Errorf("range [%s, %s): %w", ipfrom, ipto, err)
+				rerr = fmt.Errorf("range [%s, %s): %w", ipfrom, ipto, err)
 			}
 			if err != nil || pForce || i+1 >= total || time.Since(pLast) > pInt {
 				pct := float64(i+1) / float64(total) * 100
@@ -73,16 +75,24 @@ func main() {
 
 		rfrom1, err := db1.Lookup(ipfrom)
 		if err != nil {
-			return fmt.Errorf("lookup %s: ip2x: %v", ipfrom, err)
+			err = fmt.Errorf("lookup %s: ip2x: %v", ipfrom, err)
+			return false
+		}
+
+		if err = dbRecordEquals(rfrom1, rr); err != nil {
+			err = fmt.Errorf("ip2x (%s) record mismatch (%w):\n\n\titerator = %s\n\tlookup   = %#v\n\t", ipfrom, err, rfrom1.Format(true, false), rr)
+			return false
 		}
 
 		rfrom2, err := db2.Lookup(ipfrom)
 		if err != nil {
-			return fmt.Errorf("lookup %s: official: %v", ipfrom, err)
+			err = fmt.Errorf("lookup %s: official: %v", ipfrom, err)
+			return false
 		}
 
-		if err := dbRecordEquals(rfrom1, rfrom2); err != nil {
-			return fmt.Errorf("first (%s) record mismatch (%w):\n\n\tip2x     = %s\n\tofficial = %#v\n\t", ipfrom, err, rfrom1.Format(true, false), rfrom2)
+		if err = dbRecordEquals(rfrom1, rfrom2); err != nil {
+			err = fmt.Errorf("first (%s) record mismatch (%w):\n\n\tip2x     = %s\n\tofficial = %#v\n\t", ipfrom, err, rfrom1.Format(true, false), rfrom2)
+			return false
 		}
 
 		ipend := ipto.Prev()
@@ -90,37 +100,46 @@ func main() {
 			ipend = ipend.Prev()
 		}
 		if ipend.Compare(ipfrom) <= 0 || !ipend.IsValid() {
-			return nil
+			return true
 		}
 
 		rend1, err := db1.Lookup(ipend)
 		if err != nil {
-			return fmt.Errorf("lookup %s: ip2x: %v", ipend, err)
+			err = fmt.Errorf("lookup %s: ip2x: %v", ipend, err)
+			return false
 		}
 
 		rend2, err := db2.Lookup(ipend)
 		if err != nil {
-			return fmt.Errorf("lookup %s: official: %v", ipend, err)
+			err = fmt.Errorf("lookup %s: official: %v", ipend, err)
+			return false
 		}
 
-		if err := dbRecordEquals(rend1, rend2); err != nil {
+		if err = dbRecordEquals(rend1, rend2); err != nil {
 			if !rend1.IsValid() && dbRecordEmpty(rend2) {
 				fmt.Fprintf(os.Stderr, pClear+"note: range [%s, %s): address %s: no record returned by ip2x, but the record from the official library was empty too, so it's probably okay\n\n", ipfrom, ipto, ipend)
 				pForce = true
-				return nil
+				err = nil
+				return true
 			}
-			return fmt.Errorf("last (%s) record mismatch (%w):\n\n\tip2x     = %s\n\tofficial = %#v\n\t", ipend, err, rend1.Format(true, false), rend2)
+			err = fmt.Errorf("last (%s) record mismatch (%w):\n\n\tip2x     = %s\n\tofficial = %#v\n\t", ipend, err, rend1.Format(true, false), rend2)
+			return false
 		}
 
-		if err := dbRecordEquals(rend2, rfrom2); err != nil {
-			return fmt.Errorf("last official not equal to first (%w) (wtf? does verifier have a bug? or is it the official library?):\n\n\tfirst = %s\n\tlast  = %s\n\t", err, rfrom2, rend2)
+		if err = dbRecordEquals(rend2, rfrom2); err != nil {
+			err = fmt.Errorf("last official not equal to first (%w) (wtf? does verifier have a bug? or is it the official library?):\n\n\tfirst = %s\n\tlast  = %s\n\t", err, rfrom2, rend2)
+			return false
 		}
-		if err := dbRecordEquals(rend1, rfrom1); err != nil {
-			return fmt.Errorf("last ip2x not equal to first (%w) (does ip2x have a bug? or is it the official library?):\n\n\tfirst = %s\n\tlast  = %s\n\t", err, rfrom1.Format(true, false), rend1.Format(true, false))
+		if err = dbRecordEquals(rend1, rfrom1); err != nil {
+			err = fmt.Errorf("last ip2x not equal to first (%w) (does ip2x have a bug? or is it the official library?):\n\n\tfirst = %s\n\tlast  = %s\n\t", err, rfrom1.Format(true, false), rend1.Format(true, false))
+			return false
 		}
-		return nil
+		return true
 	}); err != nil {
 		fmt.Fprintf(os.Stderr, "fatal: %v\n", err)
+		os.Exit(1)
+	} else if rerr != nil {
+		fmt.Fprintf(os.Stderr, "fatal: %v\n", rerr)
 		os.Exit(1)
 	}
 	fmt.Printf("ok, %d rows\n", tot)
@@ -178,61 +197,6 @@ func dbRecordEquals(act, exp dbRecordAdapter) error {
 				return nil
 			}
 			return fmt.Errorf("%s: expected %#v, got %#v", f, e, a)
-		}
-	}
-	return nil
-}
-
-func dbRows(r io.ReaderAt, fn func(i, total int, ipfrom, ipto netip.Addr) error) error {
-	h, err := readDBHeader(r)
-	if err != nil {
-		return err
-	}
-	var i, total int
-	if h.IP4Count > 0 {
-		total += int(h.IP4Count) - 1
-	}
-	if h.IP6Count > 0 {
-		total += int(h.IP6Count) - 1
-	}
-	if h.IP4Count > 0 {
-		colsz := 4 + uint32(h.DBColumn-1)*4
-		for lower, upper := uint32(0), h.IP4Count-1; lower < upper; lower++ {
-			var ipfrom, ipto [4]byte
-			if _, err := r.ReadAt(ipfrom[:], int64(h.IP4Base-1+colsz*lower)); err != nil {
-				return fmt.Errorf("read IPv4 %d: ipfrom: %w", lower, err)
-			}
-			if _, err := r.ReadAt(ipto[:], int64(h.IP4Base-1+colsz*lower+colsz)); err != nil {
-				return fmt.Errorf("read IPv4 %d: ipto: %w", lower, err)
-			}
-			for j, n := 0, 4; j < n/2; j++ {
-				ipfrom[j], ipfrom[n-j-1] = ipfrom[n-j-1], ipfrom[j]
-				ipto[j], ipto[n-j-1] = ipto[n-j-1], ipto[j]
-			}
-			if err := fn(i, total, netip.AddrFrom4(ipfrom), netip.AddrFrom4(ipto)); err != nil {
-				return err
-			}
-			i++
-		}
-	}
-	if h.IP6Count > 0 {
-		colsz := 16 + uint32(h.DBColumn-1)*4
-		for lower, upper := uint32(0), h.IP6Count-1; lower < upper; lower++ {
-			var ipfrom, ipto [16]byte
-			if _, err := r.ReadAt(ipfrom[:], int64(h.IP6Base-1+colsz*lower)); err != nil {
-				return fmt.Errorf("read IPv6 %d: ipfrom: %w", lower, err)
-			}
-			if _, err := r.ReadAt(ipto[:], int64(h.IP6Base-1+colsz*lower+colsz)); err != nil {
-				return fmt.Errorf("read IPv6 %d: ipto: %w", lower, err)
-			}
-			for j, n := 0, 16; j < n/2; j++ {
-				ipfrom[j], ipfrom[n-j-1] = ipfrom[n-j-1], ipfrom[j]
-				ipto[j], ipto[n-j-1] = ipto[n-j-1], ipto[j]
-			}
-			if err := fn(i, total, netip.AddrFrom16(ipfrom), netip.AddrFrom16(ipto)); err != nil {
-				return err
-			}
-			i++
 		}
 	}
 	return nil
