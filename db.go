@@ -3,6 +3,7 @@ package ip2x
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/netip"
 	"strconv"
@@ -300,6 +301,81 @@ func unmap(a uint128) (uint128, int) {
 		return a, 4
 	}
 	return a, 16
+}
+
+// EachRecord calls fn for each record in the database, with the current record
+// index, the total record count (i < n), the inclusive ipfrom/ipto range, and
+// the record data (which is shared and must not be used after fn returns).
+func (db *DB) EachRecord(fn func(i, n int, ipfrom, ipto netip.Addr, r Record) bool) error {
+	var i, n int
+	if db.ip4count > 0 {
+		n += int(db.ip4count) - 1
+	}
+	if db.ip6count > 0 {
+		n += int(db.ip6count) - 1
+	}
+	const (
+		iplen4 uint = 4
+		iplen6 uint = 16
+	)
+	var (
+		colsize4 = iplen4 + uint(db.dbcolumn-1)*4
+		colsize6 = iplen6 + uint(db.dbcolumn-1)*4
+		rowend4  = colsize4 + iplen4
+		rowend6  = colsize6 + iplen6
+		row      = make([]byte, rowend6)
+	)
+	if db.ip4count > 0 {
+		var (
+			row_data   = row[iplen4:colsize4]
+			row_ipfrom = row[:iplen4]
+			row_ipto   = row[colsize4:rowend4]
+		)
+		for lower, upper := uint32(0), db.ip4count-1; lower < upper; lower++ {
+			if _, err := db.r.ReadAt(row, int64(db.ip4base-1+uint32(colsize4)*lower)); err != nil {
+				return fmt.Errorf("read ipv4 row %d: %w", lower, err)
+			}
+			for j, n := 0, 4; j < n/2; j++ {
+				row_ipfrom[j], row_ipfrom[n-j-1] = row_ipfrom[n-j-1], row_ipfrom[j]
+				row_ipto[j], row_ipto[n-j-1] = row_ipto[n-j-1], row_ipto[j]
+			}
+			var (
+				ipfrom = netip.AddrFrom4(*(*[4]byte)(row_ipfrom))
+				ipto   = netip.AddrFrom4(*(*[4]byte)(row_ipto))
+				record = Record{r: db.r, s: db.s, d: row_data}
+			)
+			if !fn(i, n, ipfrom, ipto, record) {
+				return nil
+			}
+			i++
+		}
+	}
+	if db.ip6count > 0 {
+		var (
+			row_data   = row[iplen6:colsize6]
+			row_ipfrom = row[:iplen6]
+			row_ipto   = row[colsize6:rowend6]
+		)
+		for lower, upper := uint32(0), db.ip6count-1; lower < upper; lower++ {
+			if _, err := db.r.ReadAt(row, int64(db.ip6base-1+uint32(colsize6)*lower)); err != nil {
+				return fmt.Errorf("read ipv6 row %d: %w", lower, err)
+			}
+			for j, n := 0, 16; j < n/2; j++ {
+				row_ipfrom[j], row_ipfrom[n-j-1] = row_ipfrom[n-j-1], row_ipfrom[j]
+				row_ipto[j], row_ipto[n-j-1] = row_ipto[n-j-1], row_ipto[j]
+			}
+			var (
+				ipfrom = netip.AddrFrom16(*(*[16]byte)(row_ipfrom))
+				ipto   = netip.AddrFrom16(*(*[16]byte)(row_ipto))
+				record = Record{r: db.r, s: db.s, d: row_data}
+			)
+			if !fn(i, n, ipfrom, ipto, record) {
+				return nil
+			}
+			i++
+		}
+	}
+	return nil
 }
 
 // Default options for [Record.String].
