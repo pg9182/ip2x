@@ -17,29 +17,32 @@ func main() {
 // name, mobile country code (MCC), mobile network code (MNC) and carrier brand,
 // elevation, usage type, address type and advertising category.
 const IP2Location codegen.Product = `
-1     IP2Location       DB  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
-str@0 country_code          2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2
-str@3 country_name          2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2
-str@0 region                .  .  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3
-str@0 city                  .  .  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4
-f32   latitude              .  .  .  .  5  5  .  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5
-f32   longitude             .  .  .  .  6  6  .  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6
-str@0 zip_code              .  .  .  .  .  .  .  .  7  7  7  7  .  7  7  7  .  7  .  7  7  7  .  7  7
-str@0 time_zone             .  .  .  .  .  .  .  .  .  .  8  8  7  8  8  8  7  8  .  8  8  8  .  8  8
-str@0 isp                   .  3  .  5  .  7  5  7  .  8  .  9  .  9  .  9  .  9  7  9  .  9  7  9  9
-str@0 domain                .  .  .  .  .  .  6  8  .  9  . 10  . 10  . 10  . 10  8 10  . 10  8 10 10
-str@0 net_speed             .  .  .  .  .  .  .  .  .  .  .  .  8 11  . 11  8 11  . 11  . 11  . 11 11
-str@0 idd_code              .  .  .  .  .  .  .  .  .  .  .  .  .  .  9 12  . 12  . 12  9 12  . 12 12
-str@0 area_code             .  .  .  .  .  .  .  .  .  .  .  .  .  . 10 13  . 13  . 13 10 13  . 13 13
-str@0 weather_station_code  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  9 14  . 14  . 14  . 14 14
-str@0 weather_station_name  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 10 15  . 15  . 15  . 15 15
-str@0 mcc                   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  9 16  . 16  9 16 16
-str@0 mnc                   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 10 17  . 17 10 17 17
-str@0 mobile_brand          .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 11 18  . 18 11 18 18
-str@0 elevation             .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 11 19  . 19 19
-str@0 usage_type            .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 12 20 20
-str@0 address_type          .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 21
-str@0 category              .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 22
+1     IP2Location       DB  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
+str@0 country_code          2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2
+str@3 country_name          2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2
+str@0 region                .  .  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3
+str@0 city                  .  .  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4
+f32   latitude              .  .  .  .  5  5  .  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5
+f32   longitude             .  .  .  .  6  6  .  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6
+str@0 zip_code              .  .  .  .  .  .  .  .  7  7  7  7  .  7  7  7  .  7  .  7  7  7  .  7  7  7
+str@0 time_zone             .  .  .  .  .  .  .  .  .  .  8  8  7  8  8  8  7  8  .  8  8  8  .  8  8  8
+str@0 isp                   .  3  .  5  .  7  5  7  .  8  .  9  .  9  .  9  .  9  7  9  .  9  7  9  9  9
+str@0 domain                .  .  .  .  .  .  6  8  .  9  . 10  . 10  . 10  . 10  8 10  . 10  8 10 10 10
+str@0 net_speed             .  .  .  .  .  .  .  .  .  .  .  .  8 11  . 11  8 11  . 11  . 11  . 11 11 11
+str@0 idd_code              .  .  .  .  .  .  .  .  .  .  .  .  .  .  9 12  . 12  . 12  9 12  . 12 12 12
+str@0 area_code             .  .  .  .  .  .  .  .  .  .  .  .  .  . 10 13  . 13  . 13 10 13  . 13 13 13
+str@0 weather_station_code  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  9 14  . 14  . 14  . 14 14 14
+str@0 weather_station_name  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 10 15  . 15  . 15  . 15 15 15
+str@0 mcc                   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  9 16  . 16  9 16 16 16
+str@0 mnc                   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 10 17  . 17 10 17 17 17
+str@0 mobile_brand          .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 11 18  . 18 11 18 18 18
+str@0 elevation             .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 11 19  . 19 19 19
+str@0 usage_type            .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 12 20 20 20
+str@0 address_type          .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 21 21
+str@0 category              .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 22 22
+str@0 district              .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 23
+str@0 asn                   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 24
+str@0 as                    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 25
 `
 
 // IP2Proxy™ Proxy Detection Database contains IP addresses which are used as VPN
@@ -101,6 +104,9 @@ const CountryName codegen.Field = "country_name"
 
 // Internet domain name associated with IP address range.
 const Domain codegen.Field = "domain"
+
+// District or county name.
+const District codegen.Field = "district"
 
 // Average height of city above sea level in meters (m).
 const Elevation codegen.Field = "elevation"

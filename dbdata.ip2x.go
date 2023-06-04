@@ -14,7 +14,7 @@ import "strconv"
 // domain name, net speed, area code, weather station code, weather station
 // name, mobile country code (MCC), mobile network code (MNC) and carrier brand,
 // elevation, usage type, address type and advertising category.
-// Up to DB25.
+// Up to DB26.
 const IP2Location DBProduct = 1
 
 // IP2Proxy™ Proxy Detection Database contains IP addresses which are used as VPN
@@ -30,24 +30,24 @@ const IP2Proxy DBProduct = 2
 //   - (M) Multicast - One to multiple
 //   - (B) Broadcast - One to all
 //
-// In DB25.
+// In DB25-26.
 const AddressType DBField = 1
 
 // A varying length number assigned to geographic areas for call between cities.
 //
 // See https://www.ip2location.com/area-code-coverage.
 //
-// In DB15-16, DB18, DB20-22, DB24-25.
+// In DB15-16, DB18, DB20-22, DB24-26.
 const AreaCode DBField = 2
 
 // Autonomous system number (ASN).
 //
-// In PX7-11.
+// In DB26, PX7-11.
 const AS DBField = 3
 
 // Autonomous system (AS) name.
 //
-// In PX7-11.
+// In DB26, PX7-11.
 const ASN DBField = 4
 
 // The domain category is based on IAB Tech Lab Content Taxonomy.
@@ -58,91 +58,96 @@ const ASN DBField = 4
 //
 // See https://www.ip2location.com/free/iab-categories.
 //
-// In DB25.
+// In DB25-26.
 const Category DBField = 5
 
 // City name.
 //
-// In DB3-25, PX3-11.
+// In DB3-26, PX3-11.
 const City DBField = 6
 
 // Two-character country code based on ISO 3166.
 //
-// In DB1-25, PX1-11.
+// In DB1-26, PX1-11.
 const CountryCode DBField = 7
 
 // Country name based on ISO 3166.
 //
-// In DB1-25, PX1-11.
+// In DB1-26, PX1-11.
 const CountryName DBField = 8
 
 // Internet domain name associated with IP address range.
 //
-// In DB7-8, DB10, DB12, DB14, DB16, DB18-20, DB22-25, PX5-11.
+// In DB7-8, DB10, DB12, DB14, DB16, DB18-20, DB22-26, PX5-11.
 const Domain DBField = 9
+
+// District or county name.
+//
+// In DB26.
+const District DBField = 10
 
 // Average height of city above sea level in meters (m).
 //
-// In DB21-22, DB24-25.
-const Elevation DBField = 10
+// In DB21-22, DB24-26.
+const Elevation DBField = 11
 
 // The IDD prefix to call the city from another country.
 //
-// In DB15-16, DB18, DB20-22, DB24-25.
-const IDDCode DBField = 11
+// In DB15-16, DB18, DB20-22, DB24-26.
+const IDDCode DBField = 12
 
 // Internet Service Provider or company's name.
 //
-// In DB2, DB4, DB6-8, DB10, DB12, DB14, DB16, DB18-20, DB22-25, PX4-11.
-const ISP DBField = 12
+// In DB2, DB4, DB6-8, DB10, DB12, DB14, DB16, DB18-20, DB22-26, PX4-11.
+const ISP DBField = 13
 
 // Proxy last seen in days.
 //
 // In PX8-11.
-const LastSeen DBField = 13
+const LastSeen DBField = 14
 
 // City latitude. Defaults to capital city latitude if city is unknown.
 //
-// In DB5-6, DB8-25.
-const Latitude DBField = 14
+// In DB5-6, DB8-26.
+const Latitude DBField = 15
 
 // City longitude. Defaults to capital city longitude if city is unknown.
 //
-// In DB5-6, DB8-25.
-const Longitude DBField = 15
+// In DB5-6, DB8-26.
+const Longitude DBField = 16
 
 // Mobile Country Codes (MCC) as defined in ITU E.212 for use in identifying
 // mobile stations in wireless telephone networks, particularly GSM and UMTS
 // networks.
 //
-// In DB19-20, DB22-25.
-const MCC DBField = 16
+// In DB19-20, DB22-26.
+const MCC DBField = 17
 
 // Mobile Network Code (MNC) is used in combination with a Mobile Country Code
 // (MCC) to uniquely identify a mobile phone operator or carrier.
 //
-// In DB19-20, DB22-25.
-const MNC DBField = 17
+// In DB19-20, DB22-26.
+const MNC DBField = 18
 
 // Commercial brand associated with the mobile carrier.
 //
 // See https://www.ip2location.com/mobile-carrier-coverage.
 //
-// In DB19-20, DB22-25.
-const MobileBrand DBField = 18
+// In DB19-20, DB22-26.
+const MobileBrand DBField = 19
 
 // Internet Connection Type
 //   - (DIAL) dial up
 //   - (DSL) broadband/cable/fiber/mobile
 //   - (COMP) company/T1
 //
-// In DB13-14, DB16-18, DB20, DB22, DB24-25.
-const NetSpeed DBField = 19
+// In DB13-14, DB16-18, DB20, DB22, DB24-26.
+const NetSpeed DBField = 20
 
 // Name of VPN provider if available.
 //
 // In PX11.
-const Provider DBField = 20
+const Provider DBField = 21
 
 // Type of proxy.
 //   - (VPN) Anonymizing VPN services. These services offer users a publicly
@@ -171,12 +176,12 @@ const Provider DBField = 20
 //     idle resources. Only available with PX10 & PX11. Anonymity: Medium.
 //
 // In PX2-11.
-const ProxyType DBField = 21
+const ProxyType DBField = 22
 
 // Region or state name.
 //
-// In DB3-25, PX3-11.
-const Region DBField = 22
+// In DB3-26, PX3-11.
+const Region DBField = 23
 
 // Security threat reported.
 //   - (SPAM) Email and forum spammers
@@ -184,12 +189,12 @@ const Region DBField = 22
 //   - (BOTNET) Malware infected devices
 //
 // In PX9-11.
-const Threat DBField = 23
+const Threat DBField = 24
 
 // UTC time zone (with DST supported).
 //
-// In DB11-18, DB20-22, DB24-25.
-const Timezone DBField = 24
+// In DB11-18, DB20-22, DB24-26.
+const Timezone DBField = 25
 
 // Usage type classification of ISP or company.
 //   - (COM) Commercial
@@ -205,25 +210,25 @@ const Timezone DBField = 24
 //   - (SES) Search Engine Spider
 //   - (RSV) Reserved
 //
-// In DB23-25, PX6-11.
-const UsageType DBField = 25
+// In DB23-26, PX6-11.
+const UsageType DBField = 26
 
 // The special code to identify the nearest weather observation station.
 //
-// In DB17-18, DB20, DB22, DB24-25.
-const WeatherStationCode DBField = 26
+// In DB17-18, DB20, DB22, DB24-26.
+const WeatherStationCode DBField = 27
 
 // The name of the nearest weather observation station.
 //
-// In DB17-18, DB20, DB22, DB24-25.
-const WeatherStationName DBField = 27
+// In DB17-18, DB20, DB22, DB24-26.
+const WeatherStationName DBField = 28
 
 // ZIP code or Postal code.
 //
 // See https://www.ip2location.com/zip-code-coverage.
 //
-// In DB9-12, DB14-16, DB18, DB20-22, DB24-25.
-const Zipcode DBField = 28
+// In DB9-12, DB14-16, DB18, DB20-22, DB24-26.
+const Zipcode DBField = 29
 
 var _dbs = dbs{
 	IP2Location: {
@@ -252,6 +257,7 @@ var _dbs = dbs{
 		23: {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, Region: {3, 0, dbtype_str}, City: {4, 0, dbtype_str}, Latitude: {5, 255, dbtype_f32}, Longitude: {6, 255, dbtype_f32}, ISP: {7, 0, dbtype_str}, Domain: {8, 0, dbtype_str}, MCC: {9, 0, dbtype_str}, MNC: {10, 0, dbtype_str}, MobileBrand: {11, 0, dbtype_str}, UsageType: {12, 0, dbtype_str}, dbField_extra: {12, uint8(IP2Location), 23}},
 		24: {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, Region: {3, 0, dbtype_str}, City: {4, 0, dbtype_str}, Latitude: {5, 255, dbtype_f32}, Longitude: {6, 255, dbtype_f32}, Zipcode: {7, 0, dbtype_str}, Timezone: {8, 0, dbtype_str}, ISP: {9, 0, dbtype_str}, Domain: {10, 0, dbtype_str}, NetSpeed: {11, 0, dbtype_str}, IDDCode: {12, 0, dbtype_str}, AreaCode: {13, 0, dbtype_str}, WeatherStationCode: {14, 0, dbtype_str}, WeatherStationName: {15, 0, dbtype_str}, MCC: {16, 0, dbtype_str}, MNC: {17, 0, dbtype_str}, MobileBrand: {18, 0, dbtype_str}, Elevation: {19, 0, dbtype_str}, UsageType: {20, 0, dbtype_str}, dbField_extra: {20, uint8(IP2Location), 24}},
 		25: {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, Region: {3, 0, dbtype_str}, City: {4, 0, dbtype_str}, Latitude: {5, 255, dbtype_f32}, Longitude: {6, 255, dbtype_f32}, Zipcode: {7, 0, dbtype_str}, Timezone: {8, 0, dbtype_str}, ISP: {9, 0, dbtype_str}, Domain: {10, 0, dbtype_str}, NetSpeed: {11, 0, dbtype_str}, IDDCode: {12, 0, dbtype_str}, AreaCode: {13, 0, dbtype_str}, WeatherStationCode: {14, 0, dbtype_str}, WeatherStationName: {15, 0, dbtype_str}, MCC: {16, 0, dbtype_str}, MNC: {17, 0, dbtype_str}, MobileBrand: {18, 0, dbtype_str}, Elevation: {19, 0, dbtype_str}, UsageType: {20, 0, dbtype_str}, AddressType: {21, 0, dbtype_str}, Category: {22, 0, dbtype_str}, dbField_extra: {22, uint8(IP2Location), 25}},
+		26: {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, Region: {3, 0, dbtype_str}, City: {4, 0, dbtype_str}, Latitude: {5, 255, dbtype_f32}, Longitude: {6, 255, dbtype_f32}, Zipcode: {7, 0, dbtype_str}, Timezone: {8, 0, dbtype_str}, ISP: {9, 0, dbtype_str}, Domain: {10, 0, dbtype_str}, NetSpeed: {11, 0, dbtype_str}, IDDCode: {12, 0, dbtype_str}, AreaCode: {13, 0, dbtype_str}, WeatherStationCode: {14, 0, dbtype_str}, WeatherStationName: {15, 0, dbtype_str}, MCC: {16, 0, dbtype_str}, MNC: {17, 0, dbtype_str}, MobileBrand: {18, 0, dbtype_str}, Elevation: {19, 0, dbtype_str}, UsageType: {20, 0, dbtype_str}, AddressType: {21, 0, dbtype_str}, Category: {22, 0, dbtype_str}, District: {23, 0, dbtype_str}, ASN: {24, 0, dbtype_str}, AS: {25, 0, dbtype_str}, dbField_extra: {25, uint8(IP2Location), 26}},
 	},
 	IP2Proxy: {
 		1:  {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, dbField_extra: {2, uint8(IP2Proxy), 1}},
@@ -270,8 +276,8 @@ var _dbs = dbs{
 
 const (
 	dbProductMax  = DBProduct(2)
-	dbTypeMax     = DBType(25)
-	dbFieldMax    = DBField(28)
+	dbTypeMax     = DBType(26)
+	dbFieldMax    = DBField(29)
 	dbField_extra = dbFieldMax + 1
 )
 
@@ -313,42 +319,42 @@ func (c dbI) Type() uint8      { return c.typ }
 
 func (p DBProduct) GoString() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {
-		return _stringer_xmjldxrr[_stringer_DBProduct_GoString[o]:_stringer_DBProduct_GoString[o+1]]
+		return _stringer_vzc2jgus[_stringer_DBProduct_GoString[o]:_stringer_DBProduct_GoString[o+1]]
 	}
 	return "DBProduct(" + strconv.FormatUint(uint64(p), 10) + ")"
 }
 
 func (p DBProduct) product() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {
-		return _stringer_xmjldxrr[_stringer_DBProduct_product[o]:_stringer_DBProduct_product[o+1]]
+		return _stringer_vzc2jgus[_stringer_DBProduct_product[o]:_stringer_DBProduct_product[o+1]]
 	}
 	return ""
 }
 
 func (p DBProduct) prefix() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {
-		return _stringer_xmjldxrr[_stringer_DBProduct_prefix[o]:_stringer_DBProduct_prefix[o+1]]
+		return _stringer_vzc2jgus[_stringer_DBProduct_prefix[o]:_stringer_DBProduct_prefix[o+1]]
 	}
 	return ""
 }
 
 func (f DBField) GoString() string {
-	if o := int64(f)*2 - 2; o >= 0 && o < 55 {
-		return _stringer_xmjldxrr[_stringer_DBField_GoString[o]:_stringer_DBField_GoString[o+1]]
+	if o := int64(f)*2 - 2; o >= 0 && o < 57 {
+		return _stringer_vzc2jgus[_stringer_DBField_GoString[o]:_stringer_DBField_GoString[o+1]]
 	}
 	return "DBField(" + strconv.FormatUint(uint64(f), 10) + ")"
 }
 
 func (f DBField) column() string {
-	if o := int64(f)*2 - 2; o >= 0 && o < 55 {
-		return _stringer_xmjldxrr[_stringer_DBField_column[o]:_stringer_DBField_column[o+1]]
+	if o := int64(f)*2 - 2; o >= 0 && o < 57 {
+		return _stringer_vzc2jgus[_stringer_DBField_column[o]:_stringer_DBField_column[o+1]]
 	}
 	return ""
 }
 
-const _stringer_xmjldxrr = "IP2LocationIP2ProxyDBPXAddressTypeAreaCodeASNCategoryCityCountryCodeCountryNameDomainElevationIDDCodeISPLastSeenLatitudeLongitudeMCCMNCMobileBrandNetSpeedProviderProxyTypeRegionThreatTimezoneUsageTypeWeatherStationCodeWeatherStationNameZipcodeaddress_typearea_codeasncategorycitycountry_codecountry_namedomainelevationidd_codeisplast_seenlatitudelongitudemccmncmobile_brandnet_speedproviderproxy_typeregionthreattime_zoneusage_typeweather_station_codeweather_station_namezip_code" // ratio 479 / 502 = 0.9
+const _stringer_vzc2jgus = "IP2LocationIP2ProxyDBPXAddressTypeAreaCodeASNCategoryCityCountryCodeCountryNameDomainDistrictElevationIDDCodeISPLastSeenLatitudeLongitudeMCCMNCMobileBrandNetSpeedProviderProxyTypeRegionThreatTimezoneUsageTypeWeatherStationCodeWeatherStationNameZipcodeaddress_typearea_codeasncategorycitycountry_codecountry_namedomaindistrictelevationidd_codeisplast_seenlatitudelongitudemccmncmobile_brandnet_speedproviderproxy_typeregionthreattime_zoneusage_typeweather_station_codeweather_station_namezip_code" // ratio 495 / 518 = 0.9
 var _stringer_DBProduct_GoString = [...]int{0, 11, 11, 19}
 var _stringer_DBProduct_product = [...]int{0, 11, 11, 19}
 var _stringer_DBProduct_prefix = [...]int{19, 21, 21, 23}
-var _stringer_DBField_GoString = [...]int{23, 34, 34, 42, 42, 44, 42, 45, 45, 53, 53, 57, 57, 68, 68, 79, 79, 85, 85, 94, 94, 101, 101, 104, 104, 112, 112, 120, 120, 129, 129, 132, 132, 135, 135, 146, 146, 154, 154, 162, 162, 171, 171, 177, 177, 183, 183, 191, 191, 200, 200, 218, 218, 236, 236, 243}
-var _stringer_DBField_column = [...]int{243, 255, 255, 264, 264, 266, 264, 267, 267, 275, 275, 279, 279, 291, 291, 303, 303, 309, 309, 318, 318, 326, 326, 329, 329, 338, 338, 346, 346, 355, 355, 358, 358, 361, 361, 373, 373, 382, 382, 390, 390, 400, 400, 406, 406, 412, 412, 421, 421, 431, 431, 451, 451, 471, 471, 479}
+var _stringer_DBField_GoString = [...]int{23, 34, 34, 42, 42, 44, 42, 45, 45, 53, 53, 57, 57, 68, 68, 79, 79, 85, 85, 93, 93, 102, 102, 109, 109, 112, 112, 120, 120, 128, 128, 137, 137, 140, 140, 143, 143, 154, 154, 162, 162, 170, 170, 179, 179, 185, 185, 191, 191, 199, 199, 208, 208, 226, 226, 244, 244, 251}
+var _stringer_DBField_column = [...]int{251, 263, 263, 272, 272, 274, 272, 275, 275, 283, 283, 287, 287, 299, 299, 311, 311, 317, 317, 325, 325, 334, 334, 342, 342, 345, 345, 354, 354, 362, 362, 371, 371, 374, 374, 377, 377, 389, 389, 398, 398, 406, 406, 416, 416, 422, 422, 428, 428, 437, 437, 447, 447, 467, 467, 487, 487, 495}
