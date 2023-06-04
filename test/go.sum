@@ -1,5 +1,5 @@
-github.com/ip2location/ip2location-go/v9 v9.5.1 h1:R67Lz7W5JeE5AuKkx0TUq3H379UKPXoZvpfGWNT1/fA=
-github.com/ip2location/ip2location-go/v9 v9.5.1/go.mod h1:MPLnsKxwQlvd2lBNcQCsLoyzJLDBFizuO67wXXdzoyI=
+github.com/ip2location/ip2location-go/v9 v9.6.0 h1:do+hKM2wbVG3lXMavZzWuy0znXxJBvGc7mv0wzRVoYc=
+github.com/ip2location/ip2location-go/v9 v9.6.0/go.mod h1:MPLnsKxwQlvd2lBNcQCsLoyzJLDBFizuO67wXXdzoyI=
 github.com/ip2location/ip2proxy-go/v3 v3.4.1 h1:1ibFfsYum98TSWE7LW2IaUOrK4y1qg5eJDKT+B8g54s=
 github.com/ip2location/ip2proxy-go/v3 v3.4.1/go.mod h1:QsYxbbXHRLQlb+JtOFdPSoqTVBDxfTNYRlWMETIiJbM=
 lukechampine.com/uint128 v1.2.0 h1:mBi/5l91vocEN8otkC5bDLhi2KdCticRiwbdB0O+rjI=
