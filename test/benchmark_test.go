@@ -9,116 +9,127 @@ import (
 	"github.com/pg9182/ip2x"
 )
 
+// go test -run='^$' -bench=.+ -benchmem -count 10 -v . > bench.txt
+// go run golang.org/x/perf/cmd/benchstat@latest -row .name -col /lib bench.txt
+
 func TestMain(m *testing.M) {
 	fmt.Printf("db: %s\n", IP2x_DB)
 	os.Exit(m.Run())
 }
 
-func BenchmarkIP2x_Init(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ip2x.New(DB)
-	}
+func BenchmarkInit(b *testing.B) {
+	b.Run("lib=ip2x", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			ip2x.New(DB)
+		}
+	})
+	b.Run("lib=ip2location", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			ip2location.OpenDBWithReader(DB)
+		}
+	})
 }
 
-func BenchmarkIP2x_LookupOnly(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IP2x_DB.Lookup(ips[i%len(ips)])
-	}
+func BenchmarkLookupOnly(b *testing.B) {
+	b.Run("lib=ip2x", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			IP2x_DB.Lookup(ips[i%len(ips)])
+		}
+	})
+	b.Run("lib=ip2location", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			ip2locationv9_query(IP2LocationV9_DB, ipstrs[i%len(ips)], 0)
+		}
+	})
 }
 
-func BenchmarkIP2x_GetAll(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
-		IP2x_DB.EachField(func(d ip2x.DBField) bool {
-			r.Get(d)
-			return true
-		})
-	}
+func BenchmarkGetAll(b *testing.B) {
+	b.Run("lib=ip2x", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
+			IP2x_DB.EachField(func(d ip2x.DBField) bool {
+				r.Get(d)
+				return true
+			})
+		}
+	})
+	b.Run("lib=ip2location", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			IP2LocationV9_DB.Get_all(ipstrs[i%len(ips)])
+		}
+	})
 }
 
-func BenchmarkIP2x_GetOneString(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
-		r.GetString(ip2x.CountryCode)
-	}
+func BenchmarkGetOneString(b *testing.B) {
+	b.Run("lib=ip2x", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
+			r.GetString(ip2x.CountryCode)
+		}
+	})
+	b.Run("lib=ip2location", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			IP2LocationV9_DB.Get_country_short(ipstrs[i%len(ips)])
+		}
+	})
 }
 
-func BenchmarkIP2x_GetOneFloat(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
-		r.GetFloat32(ip2x.Latitude)
-	}
+func BenchmarkGetOneFloat(b *testing.B) {
+	b.Run("lib=ip2x", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
+			r.GetFloat32(ip2x.Latitude)
+		}
+	})
+	b.Run("lib=ip2location", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			IP2LocationV9_DB.Get_latitude(ipstrs[i%len(ips)])
+		}
+	})
 }
 
-func BenchmarkIP2x_GetTwoString(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
-		r.GetString(ip2x.CountryCode)
-		r.GetString(ip2x.Region)
-	}
+func BenchmarkGetTwoString(b *testing.B) {
+	b.Run("lib=ip2x", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
+			r.GetString(ip2x.CountryCode)
+			r.GetString(ip2x.Region)
+		}
+	})
+	b.Run("lib=ip2location", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			IP2LocationV9_DB.Get_country_short(ipstrs[i%len(ips)])
+			IP2LocationV9_DB.Get_country_long(ipstrs[i%len(ips)])
+		}
+	})
 }
 
-func BenchmarkIP2x_GetTwoFloat(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
-		r.GetFloat32(ip2x.Latitude)
-		r.GetFloat32(ip2x.Longitude)
-	}
+func BenchmarkGetTwoFloat(b *testing.B) {
+	b.Run("lib=ip2x", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
+			r.GetFloat32(ip2x.Latitude)
+			r.GetFloat32(ip2x.Longitude)
+		}
+	})
+	b.Run("lib=ip2location", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			IP2LocationV9_DB.Get_latitude(ipstrs[i%len(ips)])
+			IP2LocationV9_DB.Get_longitude(ipstrs[i%len(ips)])
+		}
+	})
 }
 
-func BenchmarkIP2x_GetNonexistent(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
-		r.GetString(ip2x.MCC)
-	}
-}
-
-func BenchmarkIP2LocationV9_Init(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ip2location.OpenDBWithReader(DB)
-	}
-}
-
-func BenchmarkIP2LocationV9_LookupOnly(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ip2locationv9_query(IP2LocationV9_DB, ipstrs[i%len(ips)], 0)
-	}
-}
-
-func BenchmarkIP2LocationV9_GetAll(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IP2LocationV9_DB.Get_all(ipstrs[i%len(ips)])
-	}
-}
-
-func BenchmarkIP2LocationV9_GetOneString(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IP2LocationV9_DB.Get_country_short(ipstrs[i%len(ips)])
-	}
-}
-
-func BenchmarkIP2LocationV9_GetOneFloat(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IP2LocationV9_DB.Get_latitude(ipstrs[i%len(ips)])
-	}
-}
-
-func BenchmarkIP2LocationV9_GetTwoString(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IP2LocationV9_DB.Get_country_short(ipstrs[i%len(ips)])
-		IP2LocationV9_DB.Get_country_long(ipstrs[i%len(ips)])
-	}
-}
-
-func BenchmarkIP2LocationV9_GetTwoFloat(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IP2LocationV9_DB.Get_latitude(ipstrs[i%len(ips)])
-		IP2LocationV9_DB.Get_longitude(ipstrs[i%len(ips)])
-	}
-}
-
-func BenchmarkIP2LocationV9_GetNonexistent(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		IP2LocationV9_DB.Get_mcc(ipstrs[i%len(ips)])
-	}
+func BenchmarkGetNonexistent(b *testing.B) {
+	b.Run("lib=ip2x", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			r, _ := IP2x_DB.Lookup(ips[i%len(ips)])
+			r.GetString(ip2x.MCC)
+		}
+	})
+	b.Run("lib=ip2location", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			IP2LocationV9_DB.Get_mcc(ipstrs[i%len(ips)])
+		}
+	})
 }
