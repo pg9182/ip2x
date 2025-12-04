@@ -115,7 +115,7 @@ func withoutFields(i *dbS, f ...DBField) *dbS {
 
 // String returns a human-readable string describing the database.
 func (db *DB) String() string {
-	s := make([]byte, 256)
+	s := make([]byte, 0, 256)
 	s = append(s, db.prcode.product()...)
 	s = append(s, ' ')
 	s = append(s, db.prcode.prefix()...)
