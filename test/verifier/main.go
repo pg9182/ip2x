@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/ip2location/ip2location-go/v9"
-	"github.com/ip2location/ip2proxy-go/v3"
+	"github.com/ip2location/ip2proxy-go/v4"
 	"github.com/pg9182/ip2x"
 )
 
@@ -322,15 +322,22 @@ var ip2locationRecordMap = map[ip2x.DBField]string{
 	ip2x.UsageType:          "Usagetype",
 	ip2x.AddressType:        "Addresstype",
 	ip2x.Category:           "Category",
+	ip2x.District:           "District",
+	ip2x.ASN:                "Asn",
+	ip2x.AS:                 "As",
+	ip2x.ASDomain:           "Asdomain",
+	ip2x.ASUsageType:        "Asusagetype",
+	ip2x.ASRange:            "Ascidr",
 }
 
 func (r ip2locationRecordAdapter) Get(f ip2x.DBField) any {
 	const (
-		not_supported   = "This parameter is unavailable for selected data file. Please upgrade the data file."
-		invalid_address = "Invalid IP address."
+		not_supported      = "This parameter is unavailable for selected data file. Please upgrade the data file."
+		invalid_address    = "Invalid IP address."
+		ipv6_not_supported = "IPv6 address missing in IPv4 BIN."
 	)
 	if n, ok := ip2locationRecordMap[f]; ok {
-		if v := reflect.ValueOf((ip2location.IP2Locationrecord)(r)).FieldByName(n).Interface(); v != not_supported && v != invalid_address {
+		if v := reflect.ValueOf((ip2location.IP2Locationrecord)(r)).FieldByName(n).Interface(); v != not_supported && v != invalid_address && v != ipv6_not_supported {
 			return v
 		}
 	}
@@ -338,31 +345,33 @@ func (r ip2locationRecordAdapter) Get(f ip2x.DBField) any {
 }
 
 var ip2proxyRecordMap = map[ip2x.DBField]string{
-	ip2x.ProxyType:   "ProxyType",
 	ip2x.CountryCode: "CountryShort",
 	ip2x.CountryName: "CountryLong",
 	ip2x.Region:      "Region",
 	ip2x.City:        "City",
-	ip2x.ISP:         "ISP",
+	ip2x.ISP:         "Isp",
+	ip2x.ProxyType:   "ProxyType",
 	ip2x.Domain:      "Domain",
 	ip2x.UsageType:   "UsageType",
-	ip2x.ASN:         "ASN",
-	ip2x.AS:          "AS",
+	ip2x.ASN:         "Asn",
+	ip2x.AS:          "As",
 	ip2x.LastSeen:    "LastSeen",
 	ip2x.Threat:      "Threat",
 	ip2x.Provider:    "Provider",
+	ip2x.FraudScore:  "FraudScore",
 }
 
-type ip2proxyRecordAdapter map[string]string
+type ip2proxyRecordAdapter ip2proxy.IP2ProxyRecord
 
 func (r ip2proxyRecordAdapter) Get(f ip2x.DBField) any {
 	const (
-		msgNotSupported = "NOT SUPPORTED"
-		msgInvalidIP    = "INVALID IP ADDRESS"
+		msgNotSupported    = "NOT SUPPORTED"
+		msgInvalidIP       = "INVALID IP ADDRESS"
+		msgIPV6Unsupported = "IPV6 ADDRESS MISSING IN IPV4 BIN"
 	)
 	if n, ok := ip2proxyRecordMap[f]; ok {
-		if n != msgNotSupported && n != msgInvalidIP {
-			return r[n]
+		if v := reflect.ValueOf((ip2proxy.IP2ProxyRecord)(r)).FieldByName(n).Interface(); v != msgNotSupported && v != msgInvalidIP && v != msgIPV6Unsupported {
+			return v
 		}
 	}
 	return nil

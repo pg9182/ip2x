@@ -1,6 +1,6 @@
-github.com/ip2location/ip2location-go/v9 v9.6.0 h1:do+hKM2wbVG3lXMavZzWuy0znXxJBvGc7mv0wzRVoYc=
-github.com/ip2location/ip2location-go/v9 v9.6.0/go.mod h1:MPLnsKxwQlvd2lBNcQCsLoyzJLDBFizuO67wXXdzoyI=
-github.com/ip2location/ip2proxy-go/v3 v3.4.1 h1:1ibFfsYum98TSWE7LW2IaUOrK4y1qg5eJDKT+B8g54s=
-github.com/ip2location/ip2proxy-go/v3 v3.4.1/go.mod h1:QsYxbbXHRLQlb+JtOFdPSoqTVBDxfTNYRlWMETIiJbM=
+github.com/ip2location/ip2location-go/v9 v9.8.0 h1:drPzGjj1EBl45I33ErMHFtIfsQ3mR85dAQbqMDbi9mc=
+github.com/ip2location/ip2location-go/v9 v9.8.0/go.mod h1:MPLnsKxwQlvd2lBNcQCsLoyzJLDBFizuO67wXXdzoyI=
+github.com/ip2location/ip2proxy-go/v4 v4.1.0 h1:eHd4WL6Fk21TcKRXxCuyBTcW2ZPfWWiAA5Qd5PCM1G4=
+github.com/ip2location/ip2proxy-go/v4 v4.1.0/go.mod h1:knSLTGvow2tCTxGuZNACMiqRW7h9u/F7KFrPa8HBJ8U=
 lukechampine.com/uint128 v1.2.0 h1:mBi/5l91vocEN8otkC5bDLhi2KdCticRiwbdB0O+rjI=
 lukechampine.com/uint128 v1.2.0/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
