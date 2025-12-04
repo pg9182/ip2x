@@ -4,12 +4,12 @@
 
 Module ip2x is an idiomatic, efficient, and robust library and command-line tool for querying [IP2Location](https://www.ip2location.com/) databases.
 
-Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2location/ip2location-go) and  [`github.com/ip2location/ip2proxy-go/v3`](https://github.com/ip2location/ip2proxy-go), this library:
+Compared to [`github.com/ip2location/ip2location-go/v9`](https://github.com/ip2location/ip2location-go) and  [`github.com/ip2location/ip2proxy-go/v4`](https://github.com/ip2location/ip2proxy-go), this library:
 
 - Supports Go 1.18+.
 - Supports querying using Go 1.18's new [`net/netip.Addr`](https://pkg.go.dev/net/netip) type, which is much more efficient than parsing the IP from a string every time.
 - Uses native integer types instead of `big.Int`, which is also much more efficient.
-- Is about 11x faster than this library when querying a single field, and 2x faster for all fields, while making a fraction of the number of allocations (2 for init, 1 for each lookup, plus 1 for each typed field get, or 2 for an untyped one).
+- Is about 3x faster with significantly fewer allocations (2 for init, 1 for each lookup, plus 1 for each typed field get, or 2 for an untyped one).
 - Has comprehensive built-in [documentation](https://pkg.go.dev/github.com/pg9182/ip2x), including automatically-generated information about which fields are available in different product types.
 - Supports querying information about the database itself, for example, whether it supports IPv6, and which fields are available.
 - Has a more fluent and flexible API (e.g., `record.Get(ip2x.Latitude)`, `record.GetString(ip2x.Latitude)`, `record.GetFloat(ip2x.Latitude)`)
@@ -29,27 +29,46 @@ The code for the benchmark can be found in [benchmark_test.go](./test/benchmark_
 - The entire DB is loaded into memory to ensure the disk cache does not affect results.
 
 ```
-db: IP2Location DB11 2022-10-29 [city,country_code,country_name,latitude,longitude,region,time_zone,zip_code] (IPv4+IPv6)
+db: IP2Location DB11 2025-12-01 [city,country_code,country_name,latitude,longitude,region,time_zone,zip_code] (IPv4+IPv6)
 goos: linux
 goarch: amd64
 pkg: github.com/pg9182/ip2x/test
-cpu: AMD Ryzen 5 5600G with Radeon Graphics         
-BenchmarkIP2x_Init-12                       	17850333	        67.91 ns/op	     128 B/op	       2 allocs/op
-BenchmarkIP2x_LookupOnly-12                 	18722506	        61.36 ns/op	      48 B/op	       1 allocs/op
-BenchmarkIP2x_GetAll-12                     	 1522696	       812.2 ns/op	    1688 B/op	      14 allocs/op
-BenchmarkIP2x_GetOneString-12               	 7839385	       144.1 ns/op	     304 B/op	       2 allocs/op
-BenchmarkIP2x_GetOneFloat-12                	14312419	        84.16 ns/op	      48 B/op	       1 allocs/op
-BenchmarkIP2x_GetTwoString-12               	 4243560	       244.9 ns/op	     560 B/op	       3 allocs/op
-BenchmarkIP2x_GetTwoFloat-12                	12198259	       101.1 ns/op	      48 B/op	       1 allocs/op
-BenchmarkIP2x_GetNonexistent-12             	14834245	        79.85 ns/op	      48 B/op	       1 allocs/op
-BenchmarkIP2LocationV9_Init-12              	  602967	      2191 ns/op	     400 B/op	       7 allocs/op
-BenchmarkIP2LocationV9_LookupOnly-12        	 1473849	       782.6 ns/op	     672 B/op	      24 allocs/op
-BenchmarkIP2LocationV9_GetAll-12            	  819900	      1324 ns/op	    2268 B/op	      36 allocs/op
-BenchmarkIP2LocationV9_GetOneString-12      	 1346534	       889.2 ns/op	     936 B/op	      26 allocs/op
-BenchmarkIP2LocationV9_GetOneFloat-12       	 1441219	       795.0 ns/op	     672 B/op	      24 allocs/op
-BenchmarkIP2LocationV9_GetTwoString-12      	  546868	      1866 ns/op	    1883 B/op	      53 allocs/op
-BenchmarkIP2LocationV9_GetTwoFloat-12       	  693019	      1561 ns/op	    1345 B/op	      49 allocs/op
-BenchmarkIP2LocationV9_GetNonexistent-12    	 1399872	       795.5 ns/op	     672 B/op	      24 allocs/op
+cpu: AMD Ryzen 7 255 w/ Radeon 780M Graphics        
+               │    ip2x     │               ip2location               │
+               │   sec/op    │    sec/op      vs base                  │
+Init             38.03n ± 1%   1250.50n ± 1%  +3188.19% (p=0.000 n=10)
+LookupOnly       48.62n ± 1%    198.25n ± 2%   +307.75% (p=0.000 n=10)
+GetAll           411.9n ± 2%     447.9n ± 2%     +8.74% (p=0.000 n=10)
+GetOneString     93.97n ± 2%    255.25n ± 2%   +171.61% (p=0.000 n=10)
+GetOneFloat      62.60n ± 3%    208.30n ± 1%   +232.75% (p=0.000 n=10)
+GetTwoString     132.4n ± 2%     501.2n ± 2%   +278.55% (p=0.000 n=10)
+GetTwoFloat      72.98n ± 2%    409.60n ± 1%   +461.25% (p=0.000 n=10)
+GetNonexistent   61.70n ± 2%    206.35n ± 0%   +234.44% (p=0.000 n=10)
+geomean          84.79n          354.6n        +318.24%
+
+               │     ip2x     │              ip2location              │
+               │     B/op     │     B/op      vs base                 │
+Init               128.0 ± 0%     712.0 ± 0%  +456.25% (p=0.000 n=10)
+LookupOnly         48.00 ± 0%    201.00 ± 0%  +318.75% (p=0.000 n=10)
+GetAll           1.648Ki ± 0%   1.696Ki ± 0%    +2.90% (p=0.000 n=10)
+GetOneString       304.0 ± 0%     457.0 ± 0%   +50.33% (p=0.000 n=10)
+GetOneFloat        48.00 ± 0%    201.00 ± 0%  +318.75% (p=0.000 n=10)
+GetTwoString       560.0 ± 0%     914.0 ± 0%   +63.21% (p=0.000 n=10)
+GetTwoFloat        48.00 ± 0%    402.00 ± 0%  +737.50% (p=0.000 n=10)
+GetNonexistent     48.00 ± 0%    201.00 ± 0%  +318.75% (p=0.000 n=10)
+geomean            145.0          450.2       +210.49%
+
+               │    ip2x    │             ip2location              │
+               │ allocs/op  │  allocs/op   vs base                 │
+Init             2.000 ± 0%   17.000 ± 0%  +750.00% (p=0.000 n=10)
+LookupOnly       1.000 ± 0%    4.000 ± 0%  +300.00% (p=0.000 n=10)
+GetAll           14.00 ± 0%    10.00 ± 0%   -28.57% (p=0.000 n=10)
+GetOneString     2.000 ± 0%    5.000 ± 0%  +150.00% (p=0.000 n=10)
+GetOneFloat      1.000 ± 0%    4.000 ± 0%  +300.00% (p=0.000 n=10)
+GetTwoString     3.000 ± 0%   11.000 ± 0%  +266.67% (p=0.000 n=10)
+GetTwoFloat      1.000 ± 0%    9.000 ± 0%  +800.00% (p=0.000 n=10)
+GetNonexistent   1.000 ± 0%    4.000 ± 0%  +300.00% (p=0.000 n=10)
+geomean          1.897         6.941       +265.80%
 ```
 
 ## CLI
