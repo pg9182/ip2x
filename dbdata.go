@@ -20,7 +20,7 @@ const IP2Location codegen.Product = `
 1     IP2Location       DB  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
 str@0 country_code          2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2
 str@3 country_name          2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2  2
-str@0 region                .  .  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3
+str@0 region                .  .  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  3  
 str@0 city                  .  .  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4  4
 f32   latitude              .  .  .  .  5  5  .  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5  5
 f32   longitude             .  .  .  .  6  6  .  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6  6
@@ -43,6 +43,9 @@ str@0 category              .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 str@0 district              .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 23
 str@0 asn                   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 24
 str@0 as                    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 25
+str@0 as_domain             .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 26
+str@0 as_usage_type         .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 27
+str@0 as_cidr               .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 28
 `
 
 // IP2Proxy™ Proxy Detection Database contains IP addresses which are used as VPN
@@ -228,3 +231,12 @@ const Zipcode codegen.Field = "zip_code"
 // Fraud Score indicates a greater likelihood of fraudulent activity and a lower
 // reputation.
 const FraudScore codegen.Field = "fraud_score"
+
+// Domain name of the AS registrant.
+const ASDomain codegen.Field = "as_domain"
+
+// Usage type of the AS registrant.
+const ASUsageType codegen.Field = "as_usage_type"
+
+// CIDR range for the whole AS.
+const ASRange codegen.Field = "as_cidr"

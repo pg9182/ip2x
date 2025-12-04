@@ -246,6 +246,21 @@ const Zipcode DBField = 29
 // In PX12.
 const FraudScore DBField = 30
 
+// Domain name of the AS registrant.
+//
+// In DB26.
+const ASDomain DBField = 31
+
+// Usage type of the AS registrant.
+//
+// In DB26.
+const ASUsageType DBField = 32
+
+// CIDR range for the whole AS.
+//
+// In DB26.
+const ASRange DBField = 33
+
 var _dbs = dbs{
 	IP2Location: {
 		1:  {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, dbField_extra: {2, uint8(IP2Location), 1}},
@@ -273,7 +288,7 @@ var _dbs = dbs{
 		23: {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, Region: {3, 0, dbtype_str}, City: {4, 0, dbtype_str}, Latitude: {5, 255, dbtype_f32}, Longitude: {6, 255, dbtype_f32}, ISP: {7, 0, dbtype_str}, Domain: {8, 0, dbtype_str}, MCC: {9, 0, dbtype_str}, MNC: {10, 0, dbtype_str}, MobileBrand: {11, 0, dbtype_str}, UsageType: {12, 0, dbtype_str}, dbField_extra: {12, uint8(IP2Location), 23}},
 		24: {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, Region: {3, 0, dbtype_str}, City: {4, 0, dbtype_str}, Latitude: {5, 255, dbtype_f32}, Longitude: {6, 255, dbtype_f32}, Zipcode: {7, 0, dbtype_str}, Timezone: {8, 0, dbtype_str}, ISP: {9, 0, dbtype_str}, Domain: {10, 0, dbtype_str}, NetSpeed: {11, 0, dbtype_str}, IDDCode: {12, 0, dbtype_str}, AreaCode: {13, 0, dbtype_str}, WeatherStationCode: {14, 0, dbtype_str}, WeatherStationName: {15, 0, dbtype_str}, MCC: {16, 0, dbtype_str}, MNC: {17, 0, dbtype_str}, MobileBrand: {18, 0, dbtype_str}, Elevation: {19, 0, dbtype_str}, UsageType: {20, 0, dbtype_str}, dbField_extra: {20, uint8(IP2Location), 24}},
 		25: {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, Region: {3, 0, dbtype_str}, City: {4, 0, dbtype_str}, Latitude: {5, 255, dbtype_f32}, Longitude: {6, 255, dbtype_f32}, Zipcode: {7, 0, dbtype_str}, Timezone: {8, 0, dbtype_str}, ISP: {9, 0, dbtype_str}, Domain: {10, 0, dbtype_str}, NetSpeed: {11, 0, dbtype_str}, IDDCode: {12, 0, dbtype_str}, AreaCode: {13, 0, dbtype_str}, WeatherStationCode: {14, 0, dbtype_str}, WeatherStationName: {15, 0, dbtype_str}, MCC: {16, 0, dbtype_str}, MNC: {17, 0, dbtype_str}, MobileBrand: {18, 0, dbtype_str}, Elevation: {19, 0, dbtype_str}, UsageType: {20, 0, dbtype_str}, AddressType: {21, 0, dbtype_str}, Category: {22, 0, dbtype_str}, dbField_extra: {22, uint8(IP2Location), 25}},
-		26: {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, Region: {3, 0, dbtype_str}, City: {4, 0, dbtype_str}, Latitude: {5, 255, dbtype_f32}, Longitude: {6, 255, dbtype_f32}, Zipcode: {7, 0, dbtype_str}, Timezone: {8, 0, dbtype_str}, ISP: {9, 0, dbtype_str}, Domain: {10, 0, dbtype_str}, NetSpeed: {11, 0, dbtype_str}, IDDCode: {12, 0, dbtype_str}, AreaCode: {13, 0, dbtype_str}, WeatherStationCode: {14, 0, dbtype_str}, WeatherStationName: {15, 0, dbtype_str}, MCC: {16, 0, dbtype_str}, MNC: {17, 0, dbtype_str}, MobileBrand: {18, 0, dbtype_str}, Elevation: {19, 0, dbtype_str}, UsageType: {20, 0, dbtype_str}, AddressType: {21, 0, dbtype_str}, Category: {22, 0, dbtype_str}, District: {23, 0, dbtype_str}, ASN: {24, 0, dbtype_str}, AS: {25, 0, dbtype_str}, dbField_extra: {25, uint8(IP2Location), 26}},
+		26: {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, Region: {3, 0, dbtype_str}, City: {4, 0, dbtype_str}, Latitude: {5, 255, dbtype_f32}, Longitude: {6, 255, dbtype_f32}, Zipcode: {7, 0, dbtype_str}, Timezone: {8, 0, dbtype_str}, ISP: {9, 0, dbtype_str}, Domain: {10, 0, dbtype_str}, NetSpeed: {11, 0, dbtype_str}, IDDCode: {12, 0, dbtype_str}, AreaCode: {13, 0, dbtype_str}, WeatherStationCode: {14, 0, dbtype_str}, WeatherStationName: {15, 0, dbtype_str}, MCC: {16, 0, dbtype_str}, MNC: {17, 0, dbtype_str}, MobileBrand: {18, 0, dbtype_str}, Elevation: {19, 0, dbtype_str}, UsageType: {20, 0, dbtype_str}, AddressType: {21, 0, dbtype_str}, Category: {22, 0, dbtype_str}, District: {23, 0, dbtype_str}, ASN: {24, 0, dbtype_str}, AS: {25, 0, dbtype_str}, ASDomain: {26, 0, dbtype_str}, ASUsageType: {27, 0, dbtype_str}, ASRange: {28, 0, dbtype_str}, dbField_extra: {28, uint8(IP2Location), 26}},
 	},
 	IP2Proxy: {
 		1:  {CountryCode: {2, 0, dbtype_str}, CountryName: {2, 3, dbtype_str}, dbField_extra: {2, uint8(IP2Proxy), 1}},
@@ -294,7 +309,7 @@ var _dbs = dbs{
 const (
 	dbProductMax  = DBProduct(2)
 	dbTypeMax     = DBType(26)
-	dbFieldMax    = DBField(30)
+	dbFieldMax    = DBField(33)
 	dbField_extra = dbFieldMax + 1
 )
 
@@ -336,42 +351,42 @@ func (c dbI) Type() uint8      { return c.typ }
 
 func (p DBProduct) GoString() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {
-		return _stringer_tqjksxs4[_stringer_DBProduct_GoString[o]:_stringer_DBProduct_GoString[o+1]]
+		return _stringer_kn2hcgdo[_stringer_DBProduct_GoString[o]:_stringer_DBProduct_GoString[o+1]]
 	}
 	return "DBProduct(" + strconv.FormatUint(uint64(p), 10) + ")"
 }
 
 func (p DBProduct) product() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {
-		return _stringer_tqjksxs4[_stringer_DBProduct_product[o]:_stringer_DBProduct_product[o+1]]
+		return _stringer_kn2hcgdo[_stringer_DBProduct_product[o]:_stringer_DBProduct_product[o+1]]
 	}
 	return ""
 }
 
 func (p DBProduct) prefix() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {
-		return _stringer_tqjksxs4[_stringer_DBProduct_prefix[o]:_stringer_DBProduct_prefix[o+1]]
+		return _stringer_kn2hcgdo[_stringer_DBProduct_prefix[o]:_stringer_DBProduct_prefix[o+1]]
 	}
 	return ""
 }
 
 func (f DBField) GoString() string {
-	if o := int64(f)*2 - 2; o >= 0 && o < 59 {
-		return _stringer_tqjksxs4[_stringer_DBField_GoString[o]:_stringer_DBField_GoString[o+1]]
+	if o := int64(f)*2 - 2; o >= 0 && o < 65 {
+		return _stringer_kn2hcgdo[_stringer_DBField_GoString[o]:_stringer_DBField_GoString[o+1]]
 	}
 	return "DBField(" + strconv.FormatUint(uint64(f), 10) + ")"
 }
 
 func (f DBField) column() string {
-	if o := int64(f)*2 - 2; o >= 0 && o < 59 {
-		return _stringer_tqjksxs4[_stringer_DBField_column[o]:_stringer_DBField_column[o+1]]
+	if o := int64(f)*2 - 2; o >= 0 && o < 65 {
+		return _stringer_kn2hcgdo[_stringer_DBField_column[o]:_stringer_DBField_column[o+1]]
 	}
 	return ""
 }
 
-const _stringer_tqjksxs4 = "IP2LocationIP2ProxyDBPXAddressTypeAreaCodeASNCategoryCityCountryCodeCountryNameDomainDistrictElevationIDDCodeISPLastSeenLatitudeLongitudeMCCMNCMobileBrandNetSpeedProviderProxyTypeRegionThreatTimezoneUsageTypeWeatherStationCodeWeatherStationNameZipcodeFraudScoreaddress_typearea_codeasncategorycitycountry_codecountry_namedomaindistrictelevationidd_codeisplast_seenlatitudelongitudemccmncmobile_brandnet_speedproviderproxy_typeregionthreattime_zoneusage_typeweather_station_codeweather_station_namezip_codefraud_score" // ratio 516 / 539 = 0.9
+const _stringer_kn2hcgdo = "IP2LocationIP2ProxyDBPXAddressTypeAreaCodeASNCategoryCityCountryCodeCountryNameDomainDistrictElevationIDDCodeISPLastSeenLatitudeLongitudeMCCMNCMobileBrandNetSpeedProviderProxyTypeRegionThreatTimezoneUsageTypeWeatherStationCodeWeatherStationNameZipcodeFraudScoreASDomainASUsageTypeASRangeaddress_typearea_codeasncategorycitycountry_codecountry_namedomaindistrictelevationidd_codeisplast_seenlatitudelongitudemccmncmobile_brandnet_speedproviderproxy_typeregionthreattime_zoneusage_typeweather_station_codeweather_station_namezip_codefraud_scoreas_domainas_usage_typeas_cidr" // ratio 571 / 594 = 0.9
 var _stringer_DBProduct_GoString = [...]int{0, 11, 11, 19}
 var _stringer_DBProduct_product = [...]int{0, 11, 11, 19}
 var _stringer_DBProduct_prefix = [...]int{19, 21, 21, 23}
-var _stringer_DBField_GoString = [...]int{23, 34, 34, 42, 42, 44, 42, 45, 45, 53, 53, 57, 57, 68, 68, 79, 79, 85, 85, 93, 93, 102, 102, 109, 109, 112, 112, 120, 120, 128, 128, 137, 137, 140, 140, 143, 143, 154, 154, 162, 162, 170, 170, 179, 179, 185, 185, 191, 191, 199, 199, 208, 208, 226, 226, 244, 244, 251, 251, 261}
-var _stringer_DBField_column = [...]int{261, 273, 273, 282, 282, 284, 282, 285, 285, 293, 293, 297, 297, 309, 309, 321, 321, 327, 327, 335, 335, 344, 344, 352, 352, 355, 355, 364, 364, 372, 372, 381, 381, 384, 384, 387, 387, 399, 399, 408, 408, 416, 416, 426, 426, 432, 432, 438, 438, 447, 447, 457, 457, 477, 477, 497, 497, 505, 505, 516}
+var _stringer_DBField_GoString = [...]int{23, 34, 34, 42, 42, 44, 42, 45, 45, 53, 53, 57, 57, 68, 68, 79, 79, 85, 85, 93, 93, 102, 102, 109, 109, 112, 112, 120, 120, 128, 128, 137, 137, 140, 140, 143, 143, 154, 154, 162, 162, 170, 170, 179, 179, 185, 185, 191, 191, 199, 199, 208, 208, 226, 226, 244, 244, 251, 251, 261, 261, 269, 269, 280, 280, 287}
+var _stringer_DBField_column = [...]int{287, 299, 299, 308, 308, 310, 308, 311, 311, 319, 319, 323, 323, 335, 335, 347, 347, 353, 353, 361, 361, 370, 370, 378, 378, 381, 381, 390, 390, 398, 398, 407, 407, 410, 410, 413, 413, 425, 425, 434, 434, 442, 442, 452, 452, 458, 458, 464, 464, 473, 473, 483, 483, 503, 503, 523, 523, 531, 531, 542, 542, 551, 551, 564, 564, 571}

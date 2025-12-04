@@ -90,10 +90,27 @@ func New(r io.ReaderAt) (*DB, error) {
 	if db.s = dbinfo(db.prcode, db.dbtype); db.s == nil {
 		return nil, errors.New("unsupported database " + strconv.Itoa(int(db.prcode)))
 	}
+	if db.prcode == IP2Location && db.dbtype == 26 && db.dbcolumn == 25 {
+		// DB26 from before as_domain, as_usage_type, and as_cidr fields were added in September 2025
+		db.s = withoutFields(db.s, ASDomain, ASUsageType, ASRange)
+	}
 	if c, _, _ := db.s.Info(); db.dbcolumn != c {
 		return nil, errors.New("database is corrupt or library is buggy: db " + db.prcode.product() + " " + db.prcode.prefix() + db.dbtype.String() + ": expected " + strconv.Itoa(int(c)) + "  cols, got " + strconv.Itoa(int(db.dbcolumn)))
+
 	}
 	return &db, nil
+}
+
+func withoutFields(i *dbS, f ...DBField) *dbS {
+	i2 := *i
+	for _, f := range f {
+		if i2[f].col == 0 {
+			panic("missing field to remove")
+		}
+		i2[f] = dbI{}
+	}
+	i2[dbField_extra].col -= uint8(len(f))
+	return &i2
 }
 
 // String returns a human-readable string describing the database.
