@@ -20,7 +20,7 @@ const IP2Location DBProduct = 1
 // IP2Proxy™ Proxy Detection Database contains IP addresses which are used as VPN
 // anonymizer, open proxies, web proxies and Tor exits, data center, web hosting
 // (DCH) range, search engine robots (SES) and residential proxies (RES).
-// Up to PX11.
+// Up to PX12.
 const IP2Proxy DBProduct = 2
 
 // IP address types as defined in Internet Protocol version 4 (IPv4) and
@@ -42,12 +42,12 @@ const AreaCode DBField = 2
 
 // Autonomous system number (ASN).
 //
-// In DB26, PX7-11.
+// In DB26, PX7-12.
 const AS DBField = 3
 
 // Autonomous system (AS) name.
 //
-// In DB26, PX7-11.
+// In DB26, PX7-12.
 const ASN DBField = 4
 
 // The domain category is based on IAB Tech Lab Content Taxonomy.
@@ -63,22 +63,22 @@ const Category DBField = 5
 
 // City name.
 //
-// In DB3-26, PX3-11.
+// In DB3-26, PX3-12.
 const City DBField = 6
 
 // Two-character country code based on ISO 3166.
 //
-// In DB1-26, PX1-11.
+// In DB1-26, PX1-12.
 const CountryCode DBField = 7
 
 // Country name based on ISO 3166.
 //
-// In DB1-26, PX1-11.
+// In DB1-26, PX1-12.
 const CountryName DBField = 8
 
 // Internet domain name associated with IP address range.
 //
-// In DB7-8, DB10, DB12, DB14, DB16, DB18-20, DB22-26, PX5-11.
+// In DB7-8, DB10, DB12, DB14, DB16, DB18-20, DB22-26, PX5-12.
 const Domain DBField = 9
 
 // District or county name.
@@ -91,50 +91,57 @@ const District DBField = 10
 // In DB21-22, DB24-26.
 const Elevation DBField = 11
 
+// Potential risk score (0 - 99) associated with IP address. A higher IP2Proxy
+// Fraud Score indicates a greater likelihood of fraudulent activity and a lower
+// reputation.
+//
+// In PX12.
+const FraudScore DBField = 12
+
 // The IDD prefix to call the city from another country.
 //
 // In DB15-16, DB18, DB20-22, DB24-26.
-const IDDCode DBField = 12
+const IDDCode DBField = 13
 
 // Internet Service Provider or company's name.
 //
-// In DB2, DB4, DB6-8, DB10, DB12, DB14, DB16, DB18-20, DB22-26, PX4-11.
-const ISP DBField = 13
+// In DB2, DB4, DB6-8, DB10, DB12, DB14, DB16, DB18-20, DB22-26, PX4-12.
+const ISP DBField = 14
 
 // Proxy last seen in days.
 //
-// In PX8-11.
-const LastSeen DBField = 14
+// In PX8-12.
+const LastSeen DBField = 15
 
 // City latitude. Defaults to capital city latitude if city is unknown.
 //
 // In DB5-6, DB8-26.
-const Latitude DBField = 15
+const Latitude DBField = 16
 
 // City longitude. Defaults to capital city longitude if city is unknown.
 //
 // In DB5-6, DB8-26.
-const Longitude DBField = 16
+const Longitude DBField = 17
 
 // Mobile Country Codes (MCC) as defined in ITU E.212 for use in identifying
 // mobile stations in wireless telephone networks, particularly GSM and UMTS
 // networks.
 //
 // In DB19-20, DB22-26.
-const MCC DBField = 17
+const MCC DBField = 18
 
 // Mobile Network Code (MNC) is used in combination with a Mobile Country Code
 // (MCC) to uniquely identify a mobile phone operator or carrier.
 //
 // In DB19-20, DB22-26.
-const MNC DBField = 18
+const MNC DBField = 19
 
 // Commercial brand associated with the mobile carrier.
 //
 // See https://www.ip2location.com/mobile-carrier-coverage.
 //
 // In DB19-20, DB22-26.
-const MobileBrand DBField = 19
+const MobileBrand DBField = 20
 
 // Internet Connection Type
 //   - (DIAL) dial up
@@ -142,12 +149,12 @@ const MobileBrand DBField = 19
 //   - (COMP) company/T1
 //
 // In DB13-14, DB16-18, DB20, DB22, DB24-26.
-const NetSpeed DBField = 20
+const NetSpeed DBField = 21
 
 // Name of VPN provider if available.
 //
-// In PX11.
-const Provider DBField = 21
+// In PX11-12.
+const Provider DBField = 22
 
 // Type of proxy.
 //   - (VPN) Anonymizing VPN services. These services offer users a publicly
@@ -173,28 +180,37 @@ const Provider DBField = 21
 //     Anonymity: Low.
 //   - (RES) Residential proxies. These services offer users proxy connections
 //     through residential ISP with or without consents of peers to share their
-//     idle resources. Only available with PX10 & PX11. Anonymity: Medium.
+//     idle resources. Only available with PX10 - PX12. Anonymity: Medium.
+//   - (CPN) Consumer Privacy Networks. These services ensure encrypted traffic
+//     from the user's browser by routing internet requests through relays,
+//     concealing the IP address, location, and browsing activity. Only
+//     available with PX11 & PX12. Anonymity: Low.
+//   - (EPN) Enterprise Private Networks. Services like SASE or SD-WAN combine
+//     network security functions with wide-area networking (WAN) capabilities
+//     to meet the secure remote access needs of organizations. Only available
+//     with PX11 & PX12. Anonymity: Low.
 //
-// In PX2-11.
-const ProxyType DBField = 22
+// In PX2-12.
+const ProxyType DBField = 23
 
 // Region or state name.
 //
-// In DB3-26, PX3-11.
-const Region DBField = 23
+// In DB3-26, PX3-12.
+const Region DBField = 24
 
 // Security threat reported.
 //   - (SPAM) Email and forum spammers
 //   - (SCANNER) Network security scanners
 //   - (BOTNET) Malware infected devices
+//   - (BOGON) Unassigned or illegitimate IP addresses announced via BGP
 //
-// In PX9-11.
-const Threat DBField = 24
+// In PX9-12.
+const Threat DBField = 25
 
 // UTC time zone (with DST supported).
 //
 // In DB11-18, DB20-22, DB24-26.
-const Timezone DBField = 25
+const Timezone DBField = 26
 
 // Usage type classification of ISP or company.
 //   - (COM) Commercial
@@ -210,25 +226,25 @@ const Timezone DBField = 25
 //   - (SES) Search Engine Spider
 //   - (RSV) Reserved
 //
-// In DB23-26, PX6-11.
-const UsageType DBField = 26
+// In DB23-26, PX6-12.
+const UsageType DBField = 27
 
 // The special code to identify the nearest weather observation station.
 //
 // In DB17-18, DB20, DB22, DB24-26.
-const WeatherStationCode DBField = 27
+const WeatherStationCode DBField = 28
 
 // The name of the nearest weather observation station.
 //
 // In DB17-18, DB20, DB22, DB24-26.
-const WeatherStationName DBField = 28
+const WeatherStationName DBField = 29
 
 // ZIP code or Postal code.
 //
 // See https://www.ip2location.com/zip-code-coverage.
 //
 // In DB9-12, DB14-16, DB18, DB20-22, DB24-26.
-const Zipcode DBField = 29
+const Zipcode DBField = 30
 
 var _dbs = dbs{
 	IP2Location: {
@@ -271,13 +287,14 @@ var _dbs = dbs{
 		9:  {CountryCode: {3, 0, dbtype_str}, CountryName: {3, 3, dbtype_str}, ProxyType: {2, 0, dbtype_str}, Region: {4, 0, dbtype_str}, City: {5, 0, dbtype_str}, ISP: {6, 0, dbtype_str}, Domain: {7, 0, dbtype_str}, UsageType: {8, 0, dbtype_str}, ASN: {9, 0, dbtype_str}, AS: {10, 0, dbtype_str}, LastSeen: {11, 0, dbtype_str}, Threat: {12, 0, dbtype_str}, dbField_extra: {12, uint8(IP2Proxy), 9}},
 		10: {CountryCode: {3, 0, dbtype_str}, CountryName: {3, 3, dbtype_str}, ProxyType: {2, 0, dbtype_str}, Region: {4, 0, dbtype_str}, City: {5, 0, dbtype_str}, ISP: {6, 0, dbtype_str}, Domain: {7, 0, dbtype_str}, UsageType: {8, 0, dbtype_str}, ASN: {9, 0, dbtype_str}, AS: {10, 0, dbtype_str}, LastSeen: {11, 0, dbtype_str}, Threat: {12, 0, dbtype_str}, dbField_extra: {12, uint8(IP2Proxy), 10}},
 		11: {CountryCode: {3, 0, dbtype_str}, CountryName: {3, 3, dbtype_str}, ProxyType: {2, 0, dbtype_str}, Region: {4, 0, dbtype_str}, City: {5, 0, dbtype_str}, ISP: {6, 0, dbtype_str}, Domain: {7, 0, dbtype_str}, UsageType: {8, 0, dbtype_str}, ASN: {9, 0, dbtype_str}, AS: {10, 0, dbtype_str}, LastSeen: {11, 0, dbtype_str}, Threat: {12, 0, dbtype_str}, Provider: {13, 0, dbtype_str}, dbField_extra: {13, uint8(IP2Proxy), 11}},
+		12: {CountryCode: {3, 0, dbtype_str}, CountryName: {3, 3, dbtype_str}, ProxyType: {2, 0, dbtype_str}, Region: {4, 0, dbtype_str}, City: {5, 0, dbtype_str}, ISP: {6, 0, dbtype_str}, Domain: {7, 0, dbtype_str}, UsageType: {8, 0, dbtype_str}, ASN: {9, 0, dbtype_str}, AS: {10, 0, dbtype_str}, LastSeen: {11, 0, dbtype_str}, Threat: {12, 0, dbtype_str}, Provider: {13, 0, dbtype_str}, FraudScore: {14, 0, dbtype_str}, dbField_extra: {14, uint8(IP2Proxy), 12}},
 	},
 }
 
 const (
 	dbProductMax  = DBProduct(2)
 	dbTypeMax     = DBType(26)
-	dbFieldMax    = DBField(29)
+	dbFieldMax    = DBField(30)
 	dbField_extra = dbFieldMax + 1
 )
 
@@ -319,42 +336,42 @@ func (c dbI) Type() uint8      { return c.typ }
 
 func (p DBProduct) GoString() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {
-		return _stringer_vzc2jgus[_stringer_DBProduct_GoString[o]:_stringer_DBProduct_GoString[o+1]]
+		return _stringer_ngprzarr[_stringer_DBProduct_GoString[o]:_stringer_DBProduct_GoString[o+1]]
 	}
 	return "DBProduct(" + strconv.FormatUint(uint64(p), 10) + ")"
 }
 
 func (p DBProduct) product() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {
-		return _stringer_vzc2jgus[_stringer_DBProduct_product[o]:_stringer_DBProduct_product[o+1]]
+		return _stringer_ngprzarr[_stringer_DBProduct_product[o]:_stringer_DBProduct_product[o+1]]
 	}
 	return ""
 }
 
 func (p DBProduct) prefix() string {
 	if o := int64(p)*2 - 2; o >= 0 && o < 3 {
-		return _stringer_vzc2jgus[_stringer_DBProduct_prefix[o]:_stringer_DBProduct_prefix[o+1]]
+		return _stringer_ngprzarr[_stringer_DBProduct_prefix[o]:_stringer_DBProduct_prefix[o+1]]
 	}
 	return ""
 }
 
 func (f DBField) GoString() string {
-	if o := int64(f)*2 - 2; o >= 0 && o < 57 {
-		return _stringer_vzc2jgus[_stringer_DBField_GoString[o]:_stringer_DBField_GoString[o+1]]
+	if o := int64(f)*2 - 2; o >= 0 && o < 59 {
+		return _stringer_ngprzarr[_stringer_DBField_GoString[o]:_stringer_DBField_GoString[o+1]]
 	}
 	return "DBField(" + strconv.FormatUint(uint64(f), 10) + ")"
 }
 
 func (f DBField) column() string {
-	if o := int64(f)*2 - 2; o >= 0 && o < 57 {
-		return _stringer_vzc2jgus[_stringer_DBField_column[o]:_stringer_DBField_column[o+1]]
+	if o := int64(f)*2 - 2; o >= 0 && o < 59 {
+		return _stringer_ngprzarr[_stringer_DBField_column[o]:_stringer_DBField_column[o+1]]
 	}
 	return ""
 }
 
-const _stringer_vzc2jgus = "IP2LocationIP2ProxyDBPXAddressTypeAreaCodeASNCategoryCityCountryCodeCountryNameDomainDistrictElevationIDDCodeISPLastSeenLatitudeLongitudeMCCMNCMobileBrandNetSpeedProviderProxyTypeRegionThreatTimezoneUsageTypeWeatherStationCodeWeatherStationNameZipcodeaddress_typearea_codeasncategorycitycountry_codecountry_namedomaindistrictelevationidd_codeisplast_seenlatitudelongitudemccmncmobile_brandnet_speedproviderproxy_typeregionthreattime_zoneusage_typeweather_station_codeweather_station_namezip_code" // ratio 495 / 518 = 0.9
+const _stringer_ngprzarr = "IP2LocationIP2ProxyDBPXAddressTypeAreaCodeASNCategoryCityCountryCodeCountryNameDomainDistrictElevationFraudScoreIDDCodeISPLastSeenLatitudeLongitudeMCCMNCMobileBrandNetSpeedProviderProxyTypeRegionThreatTimezoneUsageTypeWeatherStationCodeWeatherStationNameZipcodeaddress_typearea_codeasncategorycitycountry_codecountry_namedomaindistrictelevationfraud_scoreidd_codeisplast_seenlatitudelongitudemccmncmobile_brandnet_speedproviderproxy_typeregionthreattime_zoneusage_typeweather_station_codeweather_station_namezip_code" // ratio 516 / 539 = 0.9
 var _stringer_DBProduct_GoString = [...]int{0, 11, 11, 19}
 var _stringer_DBProduct_product = [...]int{0, 11, 11, 19}
 var _stringer_DBProduct_prefix = [...]int{19, 21, 21, 23}
-var _stringer_DBField_GoString = [...]int{23, 34, 34, 42, 42, 44, 42, 45, 45, 53, 53, 57, 57, 68, 68, 79, 79, 85, 85, 93, 93, 102, 102, 109, 109, 112, 112, 120, 120, 128, 128, 137, 137, 140, 140, 143, 143, 154, 154, 162, 162, 170, 170, 179, 179, 185, 185, 191, 191, 199, 199, 208, 208, 226, 226, 244, 244, 251}
-var _stringer_DBField_column = [...]int{251, 263, 263, 272, 272, 274, 272, 275, 275, 283, 283, 287, 287, 299, 299, 311, 311, 317, 317, 325, 325, 334, 334, 342, 342, 345, 345, 354, 354, 362, 362, 371, 371, 374, 374, 377, 377, 389, 389, 398, 398, 406, 406, 416, 416, 422, 422, 428, 428, 437, 437, 447, 447, 467, 467, 487, 487, 495}
+var _stringer_DBField_GoString = [...]int{23, 34, 34, 42, 42, 44, 42, 45, 45, 53, 53, 57, 57, 68, 68, 79, 79, 85, 85, 93, 93, 102, 102, 112, 112, 119, 119, 122, 122, 130, 130, 138, 138, 147, 147, 150, 150, 153, 153, 164, 164, 172, 172, 180, 180, 189, 189, 195, 195, 201, 201, 209, 209, 218, 218, 236, 236, 254, 254, 261}
+var _stringer_DBField_column = [...]int{261, 273, 273, 282, 282, 284, 282, 285, 285, 293, 293, 297, 297, 309, 309, 321, 321, 327, 327, 335, 335, 344, 344, 355, 355, 363, 363, 366, 366, 375, 375, 383, 383, 392, 392, 395, 395, 398, 398, 410, 410, 419, 419, 427, 427, 437, 437, 443, 443, 449, 449, 458, 458, 468, 468, 488, 488, 508, 508, 516}

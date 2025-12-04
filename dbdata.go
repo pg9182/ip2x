@@ -49,20 +49,21 @@ str@0 as                    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 // anonymizer, open proxies, web proxies and Tor exits, data center, web hosting
 // (DCH) range, search engine robots (SES) and residential proxies (RES).
 const IP2Proxy codegen.Product = `
-2     IP2Proxy          PX  1  2  3  4  5  6  7  8  9 10 11
-str@0 country_code          2  3  3  3  3  3  3  3  3  3  3
-str@3 country_name          2  3  3  3  3  3  3  3  3  3  3
-str@0 proxy_type            .  2  2  2  2  2  2  2  2  2  2
-str@0 region                .  .  4  4  4  4  4  4  4  4  4
-str@0 city                  .  .  5  5  5  5  5  5  5  5  5
-str@0 isp                   .  .  .  6  6  6  6  6  6  6  6
-str@0 domain                .  .  .  .  7  7  7  7  7  7  7
-str@0 usage_type            .  .  .  .  .  8  8  8  8  8  8
-str@0 asn                   .  .  .  .  .  .  9  9  9  9  9
-str@0 as                    .  .  .  .  .  . 10 10 10 10 10
-str@0 last_seen             .  .  .  .  .  .  . 11 11 11 11
-str@0 threat                .  .  .  .  .  .  .  . 12 12 12
-str@0 provider              .  .  .  .  .  .  .  .  .  . 13
+2     IP2Proxy          PX  1  2  3  4  5  6  7  8  9 10 11 12
+str@0 country_code          2  3  3  3  3  3  3  3  3  3  3  3
+str@3 country_name          2  3  3  3  3  3  3  3  3  3  3  3
+str@0 proxy_type            .  2  2  2  2  2  2  2  2  2  2  2
+str@0 region                .  .  4  4  4  4  4  4  4  4  4  4
+str@0 city                  .  .  5  5  5  5  5  5  5  5  5  5
+str@0 isp                   .  .  .  6  6  6  6  6  6  6  6  6
+str@0 domain                .  .  .  .  7  7  7  7  7  7  7  7
+str@0 usage_type            .  .  .  .  .  8  8  8  8  8  8  8
+str@0 asn                   .  .  .  .  .  .  9  9  9  9  9  9
+str@0 as                    .  .  .  .  .  . 10 10 10 10 10 10
+str@0 last_seen             .  .  .  .  .  .  . 11 11 11 11 11
+str@0 threat                .  .  .  .  .  .  .  . 12 12 12 12
+str@0 provider              .  .  .  .  .  .  .  .  .  . 13 13
+str@0 fraud_score           .  .  .  .  .  .  .  .  .  .  . 14
 `
 
 // IP address types as defined in Internet Protocol version 4 (IPv4) and
@@ -110,6 +111,11 @@ const District codegen.Field = "district"
 
 // Average height of city above sea level in meters (m).
 const Elevation codegen.Field = "elevation"
+
+// Potential risk score (0 - 99) associated with IP address. A higher IP2Proxy
+// Fraud Score indicates a greater likelihood of fraudulent activity and a lower
+// reputation.
+const FraudScore codegen.Field = "fraud_score"
 
 // The IDD prefix to call the city from another country.
 const IDDCode codegen.Field = "idd_code"
@@ -173,7 +179,15 @@ const Provider codegen.Field = "provider"
 //     Anonymity: Low.
 //   - (RES) Residential proxies. These services offer users proxy connections
 //     through residential ISP with or without consents of peers to share their
-//     idle resources. Only available with PX10 & PX11. Anonymity: Medium.
+//     idle resources. Only available with PX10 - PX12. Anonymity: Medium.
+//   - (CPN) Consumer Privacy Networks. These services ensure encrypted traffic
+//     from the user's browser by routing internet requests through relays,
+//     concealing the IP address, location, and browsing activity. Only
+//     available with PX11 & PX12. Anonymity: Low.
+//   - (EPN) Enterprise Private Networks. Services like SASE or SD-WAN combine
+//     network security functions with wide-area networking (WAN) capabilities
+//     to meet the secure remote access needs of organizations. Only available
+//     with PX11 & PX12. Anonymity: Low.
 const ProxyType codegen.Field = "proxy_type"
 
 // Region or state name.
@@ -183,6 +197,7 @@ const Region codegen.Field = "region"
 //   - (SPAM) Email and forum spammers
 //   - (SCANNER) Network security scanners
 //   - (BOTNET) Malware infected devices
+//   - (BOGON) Unassigned or illegitimate IP addresses announced via BGP
 const Threat codegen.Field = "threat"
 
 // UTC time zone (with DST supported).
