@@ -13,16 +13,16 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-latest']
-        go: ['1.18.x', '1.19.x', '1.20.x']
+        go: ['1.18.x', '1.20.x', '1.25.x']
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         path: ip2x
 
     - name: Checkout testdata
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         repository: pg9182/ip2x-testdata
         ref: d77ab403210e209a73a224bb69c1304c1e954ca1
@@ -30,7 +30,7 @@ jobs:
         path: testdata
 
     - name: Setup Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v6
       with:
         go-version: ${{matrix.go}}
 
@@ -47,15 +47,9 @@ jobs:
       run: go vet ./...
       working-directory: ip2x
 
-    - name: Go staticcheck (1.18.x)
-      run: go run honnef.co/go/tools/cmd/staticcheck@2022.1.3 ./...
-      working-directory: ip2x
-      if: matrix.go == '1.18.x'
-
     - name: Go staticcheck
-      run: go run honnef.co/go/tools/cmd/staticcheck@2023.1.2 ./...
+      run: go run honnef.co/go/tools/cmd/staticcheck@${{matrix.go == '1.18.x' && 'v0.3.3' || matrix.go == '1.20.x' && 'v0.4.7' || 'v0.6.1'}} ./...
       working-directory: ip2x
-      if: matrix.go != '1.18.x'
 
     - name: Go test (ip2x)
       run: go test -v ./...
