@@ -319,6 +319,88 @@ func unmap(a uint128) (uint128, int) {
 	return a, 16
 }
 
+// Range represents an IP range from the database.
+type Range struct {
+	From netip.Addr // inclusive
+	To   netip.Addr // exclusive
+}
+
+// Each iterates over all rows in the database until fn returns false.
+func (db *DB) Each(fn func(Range, Record) bool) {
+	if fn != nil && db.s != nil {
+		db.each(false, fn)
+		db.each(true, fn)
+	}
+}
+
+func (db *DB) each(v6 bool, fn func(Range, Record) bool) {
+	var (
+		iplen   int
+		ipcount uint32
+		ipbase  uint32
+	)
+	if !v6 {
+		iplen = 4
+		ipcount = db.ip4count
+		ipbase = db.ip4base
+	} else {
+		iplen = 16
+		ipcount = db.ip6count
+		ipbase = db.ip6base
+	}
+
+	// 4 bytes per column except for the first one (IPFrom)
+	var (
+		colsize = uint(iplen) + uint(db.dbcolumn-1)*4
+		rowend  = colsize + uint(iplen)
+	)
+
+	// row buffer (columns + next IPFrom)
+	row := make([]byte, rowend)
+
+	// note: this also serves as a bounds check hint for the compiler so it
+	// doesn't generate bounds checks in the loop
+	var (
+		row_data   = row[iplen:colsize]
+		row_ipfrom = row[:iplen]
+		row_ipto   = row[colsize:rowend]
+	)
+
+	// read all rows
+	for idx := uint32(0); idx < ipcount-1; idx++ {
+		off := idx*uint32(colsize) + (ipbase - 1)
+
+		// read the row
+		if _, err := db.r.ReadAt(row, int64(off)); err != nil {
+			return
+		}
+
+		// get the row start/end range
+		var ipfrom, ipto netip.Addr
+		if iplen == 4 {
+			ipfrom = netip.AddrFrom4(to_be_u32(as_le_u32(row_ipfrom)))
+			ipto = netip.AddrFrom4(to_be_u32(as_le_u32(row_ipto)))
+		} else {
+			ipfrom = netip.AddrFrom16(to_be_u128(as_le_u128(row_ipfrom)))
+			ipto = netip.AddrFrom16(to_be_u128(as_le_u128(row_ipto)))
+		}
+
+		if !fn(
+			Range{
+				From: ipfrom,
+				To:   ipto,
+			},
+			Record{
+				r: db.r,
+				s: db.s,
+				d: row_data,
+			},
+		) {
+			return
+		}
+	}
+}
+
 // Default options for [Record.String].
 var (
 	RecordStringColor     = false
@@ -582,11 +664,20 @@ func as_le_u64(b []byte) uint64 {
 		uint64(b[4])<<32 | uint64(b[5])<<40 | uint64(b[6])<<48 | uint64(b[7])<<56
 }
 
-// as_be_u64 returns the uint64 represented by the little-endian b.
+// as_be_u64 returns the uint64 represented by the big-endian b.
 func as_be_u64(b []byte) uint64 {
 	_ = b[7] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint64(b[7]) | uint64(b[6])<<8 | uint64(b[5])<<16 | uint64(b[4])<<24 |
 		uint64(b[3])<<32 | uint64(b[2])<<40 | uint64(b[1])<<48 | uint64(b[0])<<56
+}
+
+// to_be_u32 returns v in big-endian.
+func to_be_u32(v uint32) (b [4]byte) {
+	b[0] = byte(v >> 24)
+	b[1] = byte(v >> 16)
+	b[2] = byte(v >> 8)
+	b[3] = byte(v)
+	return
 }
 
 // as_f32 returns the float32 represented by u.
@@ -621,6 +712,27 @@ func as_le_u128(b []byte) uint128 {
 		hi: as_le_u64(b[8:16]),
 		lo: as_le_u64(b[0:8]),
 	}
+}
+
+// to_be_u128 returns v in big-endian.
+func to_be_u128(v uint128) (b [16]byte) {
+	b[0] = byte(v.hi >> 56)
+	b[1] = byte(v.hi >> 48)
+	b[2] = byte(v.hi >> 40)
+	b[3] = byte(v.hi >> 32)
+	b[4] = byte(v.hi >> 24)
+	b[5] = byte(v.hi >> 16)
+	b[6] = byte(v.hi >> 8)
+	b[7] = byte(v.hi)
+	b[8] = byte(v.lo >> 56)
+	b[9] = byte(v.lo >> 48)
+	b[10] = byte(v.lo >> 40)
+	b[11] = byte(v.lo >> 32)
+	b[12] = byte(v.lo >> 24)
+	b[13] = byte(v.lo >> 16)
+	b[14] = byte(v.lo >> 8)
+	b[15] = byte(v.lo)
+	return
 }
 
 // uint128 represents a uint128 using two uint64s.
