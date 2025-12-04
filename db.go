@@ -277,8 +277,8 @@ func (db *DB) Lookup(a netip.Addr) (r Record, err error) {
 			ipfrom = as_u32_u128(as_le_u32(row_ipfrom))
 			ipto = as_u32_u128(as_le_u32(row_ipto))
 		} else {
-			ipfrom = as_be_u128(row_ipfrom)
-			ipto = as_be_u128(row_ipto)
+			ipfrom = as_le_u128(row_ipfrom)
+			ipto = as_le_u128(row_ipto)
 		}
 
 		// binary search cases
@@ -614,8 +614,8 @@ func as_u32_u128(u32 uint32) uint128 {
 	return uint128{lo: uint64(u32)}
 }
 
-// as_be_u128 reads a big-endian uint128 from b.
-func as_be_u128(b []byte) uint128 {
+// as_le_u128 reads a big-endian uint128 from b.
+func as_le_u128(b []byte) uint128 {
 	_ = b[15] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint128{
 		hi: as_le_u64(b[8:16]),
